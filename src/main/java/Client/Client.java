@@ -77,10 +77,105 @@ public class Client {
 
         // Receive and display server response
         String response = reader.readLine();
-        if (response.equals("LOGIN_SUCCESS")) {
-            System.out.println("\nYou are logged in.");
+        if (response.equals("FAN_LOGIN_SUCCESS")) {
+            System.out.println("\nYou are logged in as a fan.");
+            fanMenu(writer, reader, scanner);
+        } else if (response.equals("IDOL_LOGIN_SUCCESS")) {
+            System.out.println("\nYou are logged in as an idol.");
+            idolMenu(writer, reader, scanner);
         } else {
             System.out.println("\nLogin failed. Please try again.");
+        }
+    }
+
+    private static void fanMenu(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        // Fan Menu Options
+        System.out.println("\nFan Menu:");
+        System.out.println("1. Edit Profile");
+        System.out.println("2. Browse Idols");
+        System.out.println("3. View Interaction History");
+        System.out.println("4. Logout");
+        System.out.print("Enter your choice: ");
+        int choice = scanner.nextInt();
+
+        // Process fan menu choice
+        switch (choice) {
+            case 1:
+                /**
+                 * PLACEHOLDER FOR (FAN) EDITING PROFILE
+                 */
+                System.out.println("\nEditing profile...");
+                break;
+            case 2:
+                /**
+                 * PLACEHOLDER FOR (FAN) BROWSING IDOLS
+                 */
+                System.out.println("\nBrowsing idols...");
+                break;
+            case 3:
+                /**
+                 * PLACEHOLDER FOR (FAN) VIEWING INTERACTION HISTORY
+                 */
+                System.out.println("\nViewing interaction history...");
+                break;
+            case 4:
+                System.out.println("\nLogging out...");
+                // Send logout request to the server
+                writer.write("LOGOUT\n");
+                writer.flush();
+                break;
+            default:
+                System.out.println("\nInvalid choice.");
+                break;
+        }
+    }
+
+    private static void idolMenu(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        // Idol Menu Options
+        System.out.println("\nIdol Menu:");
+        System.out.println("1. Edit Profile");
+        System.out.println("2. View Total Earnings");
+        System.out.println("3. View Interaction History");
+        System.out.println("4. View Feedbacks");
+        System.out.println("5. Logout");
+        System.out.print("Enter your choice: ");
+        int choice = scanner.nextInt();
+
+        // Process idol menu choice
+        switch (choice) {
+            case 1:
+                /**
+                 * PLACEHOLDER FOR (IDOL) EDITING PROFILE
+                 */
+                System.out.println("\nEditing profile...");
+                break;
+            case 2:
+                /**
+                 * PLACEHOLDER FOR (IDOL) VIEWING TOTAL EARNINGS
+                 */
+                System.out.println("\nViewing total earnings...");
+                break;
+            case 3:
+                /**
+                 * PLACEHOLDER FOR (IDOL) VIEWING INTERACTION HISTORY
+                 */
+                System.out.println("\nViewing interaction history...");
+                break;
+            case 4:
+                /**
+                 * PLACEHOLDER FOR (IDOL) VIEWING FEEDBACKS
+                 */
+                System.out.println("\nViewing feedbacks...");
+                break;
+            case 5:
+                System.out.println("\nLogging out...");
+                // Send logout request to the server
+                writer.write("LOGOUT\n");
+                writer.flush();
+                break;
+            default:
+                System.out.println("\nInvalid choice.");
+                break;
         }
     }
 

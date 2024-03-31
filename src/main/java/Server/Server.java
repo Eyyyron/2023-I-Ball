@@ -165,8 +165,10 @@ public class Server {
             ResultSet idolResult = idolStatement.executeQuery();
 
             // Send response to client based on whether email exists in either table
-            if (fanResult.next() || idolResult.next()) {
-                writer.write("LOGIN_SUCCESS\n");
+            if (fanResult.next()) {
+                writer.write("FAN_LOGIN_SUCCESS\n");
+            } else if (idolResult.next()) {
+                writer.write("IDOL_LOGIN_SUCCESS\n");
             } else {
                 writer.write("LOGIN_FAILED\n");
             }
