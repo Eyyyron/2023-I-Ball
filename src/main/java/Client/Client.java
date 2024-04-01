@@ -2,19 +2,23 @@ package Client;
 
 import java.io.*;
 import java.net.Socket;
+import java.time.Duration;
 import java.util.Scanner;
 
 public class Client {
+
+    static String serverIP;
+    static int serverPort;
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("Enter the IP address and port the server class is showing right now.");
 
         System.out.print("\nEnter the server IP address: ");
-        String serverIP = scanner.nextLine();
+        serverIP = scanner.nextLine();
 
         System.out.print("Enter the server port: ");
-        int serverPort = scanner.nextInt();
+        serverPort = scanner.nextInt();
 
         try {
             // Connect to the server
@@ -148,6 +152,7 @@ public class Client {
                  * PLACEHOLDER FOR (IDOL) EDITING PROFILE
                  */
                 System.out.println("\nEditing profile...");
+                menuEditIdolProfile(writer, reader, scanner);
                 break;
             case 2:
                 /**
@@ -238,6 +243,95 @@ public class Client {
 
         // Send registration request to the server
         writer.write("REGISTER_IDOL," + idolFullName + "," + alias + "," + idolEmail + "," + idolPassword + "," + idolType + "," + idolBio + "," + qbitRatePer10Mins + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        System.out.println("\nServer response: " + response);
+    }
+
+    private static void menuEditIdolProfile(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        boolean exitMenu = false;
+
+        try (Socket socket = new Socket(serverIP, serverPort)) {
+            writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            do {
+                // Edit Profile Menu Options
+                System.out.println("\nEdit Profile Menu:");
+                System.out.println("1. Edit Name");
+                System.out.println("2. Edit Alias");
+                System.out.println("3. Edit Idol Type");
+                System.out.println("4. Edit Bio");
+                System.out.println("5. Edit QBit Rate per Minute");
+                System.out.println("6. Edit Availability");
+                System.out.println("7. Exit Menu");
+                System.out.print("Enter your choice: ");
+                int choice = scanner.nextInt();
+
+                // Process idol profile edit menu choice
+                switch (choice) {
+                    case 1:
+                        System.out.println("\nEditing Name...");
+                        break;
+                    case 2:
+                        System.out.println("\nEditing Alias...");
+                        break;
+                    case 3:
+                        System.out.println("\nEditing Idol Type...");
+                        break;
+                    case 4:
+                        System.out.println("\nEditing Bio...");
+                        break;
+                    case 5:
+                        System.out.println("\nEditing QBit Rate...");
+                        break;
+                    case 6:
+                        System.out.println("\nEditing Availability...");
+                        Duration delay = Duration.ofMillis(1000); // Set the delay to 1 second
+                        setAvailability(writer, reader, scanner);
+                        break;
+                    case 7:
+                        exitMenu = true;
+                        break;
+                    default:
+                        System.out.println("\nInvalid choice.");
+                        break;
+                }
+                System.out.println();
+            } while (!exitMenu);
+        } finally {
+            // Close the socket after all operations are done
+            if (writer != null) {
+                writer.close(); // Close the writer
+            }
+            if (reader != null) {
+                reader.close(); // Close the reader
+            }
+        }
+    }
+
+
+    private static void setAvailability(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+
+        // Get idol details from the user
+        System.out.print("\nEnter your day of availability (e.g. Monday): ");
+        String availableDay = scanner.nextLine(); // Consume the newline character
+        availableDay = scanner.nextLine();
+
+
+        System.out.print("\nEnter the starting time you are available for said day: ");
+        System.out.print("\nFollow the 24 hour format (e.g. '13:00:00' for 1:00PM)\n");
+        String startTime = scanner.nextLine();
+
+
+        System.out.print("\nEnter the time when your availablity will end for said day: ");
+        System.out.print("\nFollow the 24 hour format (e.g. '18:00:00' for 6:00PM)\n");
+        String endTime = scanner.nextLine();
+
+        // Send availability set request to the server
+        writer.write("SET_AVAILABILITY," + availableDay + "," + startTime + "," + endTime + "\n");
         writer.flush();
 
         // Receive and display server response
