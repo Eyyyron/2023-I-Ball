@@ -6,9 +6,9 @@ import java.sql.*;
 
 public class Server {
     private static final int PORT = 12345;
-    private static final String URL = "jdbc:mysql://localhost:3306/eyeball";
+    private static final String URL = "jdbc:mysql://localhost:3306/teamsea";
     private static final String USER = "root";
-    private static final String PASSWORD = null;
+    private static final String PASSWORD = "ComSci_CS221";
 
     public static void main(String[] args) {
         try {
@@ -69,6 +69,9 @@ public class Server {
                     } else if (requestType.equals("LOGIN")) {
                         // Handle login
                         login(requestData, writer);
+                    } else if (requestType.equals("SET_AVAILABILITY")) {
+                        // Handle setting availability of idol
+                        setAvailability(requestData, writer);
                     } else {
                         writer.write("Invalid request\n");
                         writer.flush();
@@ -175,5 +178,27 @@ public class Server {
             writer.flush();
         }
 
+        private void setAvailability(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            // Extract availability details from data array
+            String availableDay = data[1];
+            String startTime = data[2];
+            String endTime = data[3];
+
+            // Perform scheduling of availability
+            String query = "INSERT INTO AVAILABILITY (AvailableDay,StartTime,EndTime) VALUES (?,?,?)";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, availableDay);
+            preparedStatement.setString(2, startTime);
+            preparedStatement.setString(3, endTime);
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            // Send response to client
+            if (rowsAffected > 0) {
+                writer.write("Availability Schedule Successfully Set\n");
+            } else {
+                writer.write("Setting Availability Schedule Failed\n");
+            }
+            writer.flush();
+        }
     }
 }
