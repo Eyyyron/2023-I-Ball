@@ -169,9 +169,11 @@ public class Server {
 
             // Send response to client based on whether email exists in either table
             if (fanResult.next()) {
-                writer.write("FAN_LOGIN_SUCCESS\n");
+                String fanID = fanResult.getString("fanID");
+                writer.write("FAN_LOGIN_SUCCESS" + fanID + "\n");
             } else if (idolResult.next()) {
-                writer.write("IDOL_LOGIN_SUCCESS\n");
+                String idolID = idolResult.getString("IdolID");
+                writer.write("IDOL_LOGIN_SUCCESS," + idolID + "\n");
             } else {
                 writer.write("LOGIN_FAILED\n");
             }
@@ -180,16 +182,18 @@ public class Server {
 
         private void setAvailability(String[] data, BufferedWriter writer) throws SQLException, IOException {
             // Extract availability details from data array
-            String availableDay = data[1];
-            String startTime = data[2];
-            String endTime = data[3];
+            String idolID = data[1];
+            String availableDay = data[2];
+            String startTime = data[3];
+            String endTime = data[4];
 
             // Perform scheduling of availability
-            String query = "INSERT INTO AVAILABILITY (AvailableDay,StartTime,EndTime) VALUES (?,?,?)";
+            String query = "INSERT INTO AVAILABILITY (IdolID, AvailableDay, StartTime, EndTime) VALUES (?, ?, ?, ?)";
             PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, availableDay);
-            preparedStatement.setString(2, startTime);
-            preparedStatement.setString(3, endTime);
+            preparedStatement.setString(1, idolID);
+            preparedStatement.setString(2, availableDay);
+            preparedStatement.setString(3, startTime);
+            preparedStatement.setString(4, endTime);
             int rowsAffected = preparedStatement.executeUpdate();
 
             // Send response to client
