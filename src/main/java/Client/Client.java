@@ -9,6 +9,9 @@ public class Client {
 
     static String serverIP;
     static int serverPort;
+    private static String idolID;
+    private static String fanID;
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
@@ -81,10 +84,12 @@ public class Client {
 
         // Receive and display server response
         String response = reader.readLine();
-        if (response.equals("FAN_LOGIN_SUCCESS")) {
+        if (response.contains("FAN_LOGIN_SUCCESS")) {
+            fanID = response.split(",")[1];
             System.out.println("\nYou are logged in as a fan.");
             fanMenu(writer, reader, scanner);
-        } else if (response.equals("IDOL_LOGIN_SUCCESS")) {
+        } else if (response.contains("IDOL_LOGIN_SUCCESS")) {
+            idolID = response.split(",")[1];
             System.out.println("\nYou are logged in as an idol.");
             idolMenu(writer, reader, scanner);
         } else {
@@ -331,7 +336,7 @@ public class Client {
         String endTime = scanner.nextLine();
 
         // Send availability set request to the server
-        writer.write("SET_AVAILABILITY," + availableDay + "," + startTime + "," + endTime + "\n");
+        writer.write("SET_AVAILABILITY," + idolID + "," + availableDay + "," + startTime + "," + endTime + "\n");
         writer.flush();
 
         // Receive and display server response
