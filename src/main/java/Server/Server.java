@@ -24,7 +24,7 @@ public class Server {
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                System.out.println("\nClient connected: " + clientSocket.getInetAddress());
+                //System.out.println("\nClient connected: " + clientSocket.getInetAddress());
 
                 // Handle client requests in a separate thread
                 Thread clientThread = new Thread(new ClientHandler(clientSocket));
@@ -61,7 +61,7 @@ public class Server {
 
                     if (requestType.equals("LOGOUT")) {
                         // Handle logout
-                        System.out.println("Client logged out: " + clientSocket.getInetAddress());
+                        System.out.println("\nClient logged out: " + clientSocket.getInetAddress());
                         break; // Exit the loop to end the client thread
                     }
 
@@ -195,11 +195,11 @@ public class Server {
             if (fanResult.next()) {
                 String fanID = fanResult.getString("fanID");
                 writer.write("FAN_LOGIN_SUCCESS," + fanID + "\n");
-                System.out.println("Client logged in: " + clientSocket.getInetAddress());
+                System.out.println("\nClient logged in: " + clientSocket.getInetAddress());
             } else if (idolResult.next()) {
                 String idolID = idolResult.getString("IdolID");
                 writer.write("IDOL_LOGIN_SUCCESS," + idolID + "\n");
-                System.out.println("Client logged in: " + clientSocket.getInetAddress());
+                System.out.println("\nClient logged in: " + clientSocket.getInetAddress());
             } else {
                 writer.write("LOGIN_FAILED\n");
             }
