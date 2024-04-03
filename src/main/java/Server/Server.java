@@ -8,7 +8,7 @@ public class Server {
     private static final int PORT = 12345;
     private static final String URL = "jdbc:mysql://localhost:3306/teamsea";
     private static final String USER = "root";
-    private static final String PASSWORD = "ComSci_CS221";
+    private static final String PASSWORD = "Angelbeats#121303";
 
     public static void main(String[] args) {
         try {
@@ -72,6 +72,15 @@ public class Server {
                     } else if (requestType.equals("SET_AVAILABILITY")) {
                         // Handle setting availability of idol
                         setAvailability(requestData, writer);
+                    }else if (requestType.equals("VIEW_FEEDBACKS")) {
+                        requestData = request.split(",");
+                        int idolID = Integer.parseInt(requestData[1]);
+
+                        try {
+                            viewFeedbacks(connection, writer, idolID);
+                        } catch (SQLException | IOException e) {
+                            e.printStackTrace();
+                        }
                     } else {
                         writer.write("Invalid request\n");
                         writer.flush();
@@ -224,5 +233,28 @@ public class Server {
             }
             writer.flush();
         }
+        private static void viewFeedbacks(Connection connection, BufferedWriter writer, int idolID) throws SQLException, IOException {
+            String query = "SELECT f.FanFullName, i.IdolFullName, fbd.Rating, fbd.Comment " +
+                    "FROM fan f " +
+                    "JOIN meetup m ON f.FanID = m.FanID " +
+                    "JOIN idol i ON m.IdolID = i.IdolID " +
+                    "JOIN feedback fbd ON m.MeetupID = fbd.MeetupID " +
+                    "WHERE m.IdolID = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, idolID);
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                String fanFullName = resultSet.getString("FanFullName");
+                String idolFullName = resultSet.getString("IdolFullName");
+                int rating = resultSet.getInt("Rating");
+                String comment = resultSet.getString("Comment");
+                writer.write("FEEDBACK," + fanFullName + "," + idolFullName + "," + rating + "," + comment + "\n");
+                writer.flush();
+            }
+            writer.write("END_OF_FEEDBACK\n");
+            writer.flush();
+        }
     }
+
 }

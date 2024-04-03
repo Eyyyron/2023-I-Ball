@@ -172,10 +172,8 @@ public class Client {
                 System.out.println("\nViewing interaction history...");
                 break;
             case 4:
-                /**
-                 * PLACEHOLDER FOR (IDOL) VIEWING FEEDBACKS
-                 */
                 System.out.println("\nViewing feedbacks...");
+                viewFeedbacks(writer, reader, scanner);
                 break;
             case 5:
                 System.out.println("\nLogging out...");
@@ -341,5 +339,25 @@ public class Client {
         // Receive and display server response
         String response = reader.readLine();
         System.out.println("\nServer response: " + response);
+    }
+
+    private static void viewFeedbacks(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        // Send feedbacks request to the server
+        writer.write("VIEW_FEEDBACKS," + idolID + "\n");
+        writer.flush();
+
+        // Receive and display feedbacks from the server
+        String feedbackLine;
+        while ((feedbackLine = reader.readLine()) != null && !feedbackLine.equals("END_OF_FEEDBACK")) {
+            String[] feedbackData = feedbackLine.split(",");
+            if (feedbackData.length >= 5) {
+                System.out.println("\nFan Full Name: " + feedbackData[1]);
+                System.out.println("Idol Full Name: " + feedbackData[2]);
+                System.out.println("Rating: " + feedbackData[3]);
+                System.out.println("Comment: " + feedbackData[4]);
+            } else {
+                System.out.println("\nInvalid feedback data format.");
+            }
+        }
     }
 }
