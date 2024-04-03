@@ -2,7 +2,6 @@ package Client;
 
 import java.io.*;
 import java.net.Socket;
-import java.time.Duration;
 import java.util.Scanner;
 
 public class Client {
@@ -29,28 +28,47 @@ public class Client {
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 
-            System.out.println("\nWelcome to Eyeball!");
-
-            // Ask the user if they want to register or login
-            System.out.println("\nChoose an option:");
-            System.out.println("1. Register");
-            System.out.println("2. Login");
-            System.out.print("Enter your choice: ");
-            int choice = scanner.nextInt();
-
-            // Perform registration or login based on user's choice
-            if (choice == 1) {
-                registerUser(writer, reader, scanner);
-            } else if (choice == 2) {
-                loginUser(writer, reader, scanner);
-            } else {
-                System.out.println("\nInvalid choice. Please enter 1 for registration or 2 for login.");
-            }
+            // Call the method for register/login prompt
+            registerOrLoginPrompt(writer, reader, scanner);
 
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             scanner.close();
+        }
+    }
+
+    private static void registerOrLoginPrompt(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        boolean continuePrompt = true;
+
+        while (continuePrompt) {
+            System.out.println("\nWelcome to Eyeball!");
+
+            // Ask the user if they want to register or login
+            System.out.println("Choose an option:");
+            System.out.println("1. Register");
+            System.out.println("2. Login");
+            System.out.print("Enter your choice: ");
+
+            // Check if the input is an integer
+            if (scanner.hasNextInt()) {
+                int choice = scanner.nextInt();
+                switch (choice) {
+                    case 1:
+                        registerUser(writer, reader, scanner);
+                        break;
+                    case 2:
+                        loginUser(writer, reader, scanner);
+                        break;
+                    default:
+                        System.out.println("\nInvalid choice. Please enter a valid option.");
+                        break;
+                }
+            } else {
+                // Consume non-integer input
+                scanner.next();
+                System.out.println("\nInvalid choice. Please enter a valid integer option.");
+            }
         }
     }
 
@@ -86,11 +104,11 @@ public class Client {
         String response = reader.readLine();
         if (response.contains("FAN_LOGIN_SUCCESS")) {
             fanID = response.split(",")[1];
-            System.out.println("\nYou are logged in as a fan.");
+            System.out.println("\nLogging in as a fan...");
             fanMenu(writer, reader, scanner);
         } else if (response.contains("IDOL_LOGIN_SUCCESS")) {
             idolID = response.split(",")[1];
-            System.out.println("\nYou are logged in as an idol.");
+            System.out.println("\nLogging in as an idol...");
             idolMenu(writer, reader, scanner);
         } else {
             System.out.println("\nLogin failed. Please try again.");
@@ -98,94 +116,107 @@ public class Client {
     }
 
     private static void fanMenu(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
-        // Fan Menu Options
-        System.out.println("\nFan Menu:");
-        System.out.println("1. Edit Profile");
-        System.out.println("2. Browse Idols");
-        System.out.println("3. View Interaction History");
-        System.out.println("4. Logout");
-        System.out.print("Enter your choice: ");
-        int choice = scanner.nextInt();
+        boolean logout = false;
 
-        // Process fan menu choice
-        switch (choice) {
-            case 1:
-                /**
-                 * PLACEHOLDER FOR (FAN) EDITING PROFILE
-                 */
-                System.out.println("\nEditing profile...");
-                break;
-            case 2:
-                /**
-                 * PLACEHOLDER FOR (FAN) BROWSING IDOLS
-                 */
-                System.out.println("\nBrowsing idols...");
-                break;
-            case 3:
-                /**
-                 * PLACEHOLDER FOR (FAN) VIEWING INTERACTION HISTORY
-                 */
-                System.out.println("\nViewing interaction history...");
-                break;
-            case 4:
-                System.out.println("\nLogging out...");
-                // Send logout request to the server
-                writer.write("LOGOUT\n");
-                writer.flush();
-                break;
-            default:
-                System.out.println("\nInvalid choice.");
-                break;
+        while (!logout) {
+            System.out.println("\nFan Menu:");
+            System.out.println("1. Edit Profile");
+            System.out.println("2. Browse Idols");
+            System.out.println("3. View Interaction History");
+            System.out.println("4. Logout");
+            System.out.print("Enter your choice: ");
+
+            // Check if the input is an integer
+            if (scanner.hasNextInt()) {
+                int choice = scanner.nextInt();
+                switch (choice) {
+                    case 1:
+                        System.out.println("\nEditing profile...");
+                        // Placeholder for editing profile
+                        break;
+                    case 2:
+                        System.out.println("\nBrowsing idols...");
+                        // Placeholder for browsing idols
+                        break;
+                    case 3:
+                        System.out.println("\nViewing interaction history...");
+                        // Placeholder for viewing interaction history
+                        break;
+                    case 4:
+                        System.out.println("\nLogging out...");
+                        System.out.println("\nThank you for using the program.");
+                        writer.write("LOGOUT\n");
+                        writer.flush();
+                        logout = true;
+                        System.exit(0);
+                        break;
+                    default:
+                        System.out.println("\nInvalid choice. Please enter a valid option.");
+                        break;
+                }
+            } else {
+                // Consume non-integer input
+                scanner.next();
+                System.out.println("\nInvalid choice. Please enter a valid integer option.");
+            }
         }
     }
 
     private static void idolMenu(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
-        // Idol Menu Options
-        System.out.println("\nIdol Menu:");
-        System.out.println("1. Edit Profile");
-        System.out.println("2. View Total Earnings");
-        System.out.println("3. View Interaction History");
-        System.out.println("4. View Feedbacks");
-        System.out.println("5. Logout");
-        System.out.print("Enter your choice: ");
-        int choice = scanner.nextInt();
+        boolean logout = false;
 
-        // Process idol menu choice
-        switch (choice) {
-            case 1:
-                /**
-                 * PLACEHOLDER FOR (IDOL) EDITING PROFILE
-                 */
-                System.out.println("\nEditing profile...");
-                menuEditIdolProfile(writer, reader, scanner);
-                break;
-            case 2:
-                /**
-                 * PLACEHOLDER FOR (IDOL) VIEWING TOTAL EARNINGS
-                 */
-                System.out.println("\nViewing total earnings...");
-                break;
-            case 3:
-                /**
-                 * PLACEHOLDER FOR (IDOL) VIEWING INTERACTION HISTORY
-                 */
-                System.out.println("\nViewing interaction history...");
-                break;
-            case 4:
-                /**
-                 * PLACEHOLDER FOR (IDOL) VIEWING FEEDBACKS
-                 */
-                System.out.println("\nViewing feedbacks...");
-                break;
-            case 5:
-                System.out.println("\nLogging out...");
-                // Send logout request to the server
-                writer.write("LOGOUT\n");
-                writer.flush();
-                break;
-            default:
-                System.out.println("\nInvalid choice.");
-                break;
+        while (!logout) {
+            System.out.println("\nIdol Menu:");
+            System.out.println("1. Edit Profile");
+            System.out.println("2. View Total Earnings");
+            System.out.println("3. View Interaction History");
+            System.out.println("4. View Feedbacks");
+            System.out.println("5. Logout");
+            System.out.print("Enter your choice: ");
+
+            // Check if the input is an integer
+            if (scanner.hasNextInt()) {
+                int choice = scanner.nextInt();
+                switch (choice) {
+                    case 1:
+                        System.out.println("\nEditing profile...");
+                        menuEditIdolProfile(writer, reader, scanner);
+                        break;
+                    case 2:
+                        /**
+                         * PLACEHOLDER FOR (IDOL) VIEWING TOTAL EARNINGS
+                         */
+                        System.out.println("\nViewing total earnings...");
+                        break;
+                    case 3:
+                        /**
+                         * PLACEHOLDER FOR (IDOL) VIEWING INTERACTION HISTORY
+                         */
+                        System.out.println("\nViewing interaction history...");
+                        break;
+                    case 4:
+                        /**
+                         * PLACEHOLDER FOR (IDOL) VIEWING FEEDBACKS
+                         */
+                        System.out.println("\nViewing feedbacks...");
+                        break;
+                    case 5:
+                        System.out.println("\nLogging out...");
+                        System.out.println("\nThank you for using the program.");
+                        writer.write("LOGOUT\n");
+                        writer.flush();
+                        logout = true;
+                        System.exit(0);
+                        break;
+                    default:
+                        System.out.println("\nInvalid choice. Please enter a valid option.");
+                        break;
+                }
+            } else {
+                // Consume non-integer input
+                scanner.next();
+                System.out.println("\nInvalid choice. Please enter a valid integer option.");
+            }
         }
     }
 
@@ -264,46 +295,51 @@ public class Client {
 
             do {
                 // Edit Profile Menu Options
-                System.out.println("\nEdit Profile Menu:");
+                System.out.println("\nIdol Edit Profile Menu:");
                 System.out.println("1. Edit Name");
                 System.out.println("2. Edit Alias");
                 System.out.println("3. Edit Idol Type");
-                System.out.println("4. Edit Bio");
+                System.out.println("4. Set/Edit Bio");
                 System.out.println("5. Edit QBit Rate per Minute");
-                System.out.println("6. Edit Availability");
-                System.out.println("7. Exit Menu");
+                System.out.println("6. Set/Edit Availability");
+                System.out.println("7. Exit Idol Edit Profile Menu");
                 System.out.print("Enter your choice: ");
-                int choice = scanner.nextInt();
 
-                // Process idol profile edit menu choice
-                switch (choice) {
-                    case 1:
-                        System.out.println("\nEditing Name...");
-                        break;
-                    case 2:
-                        System.out.println("\nEditing Alias...");
-                        break;
-                    case 3:
-                        System.out.println("\nEditing Idol Type...");
-                        break;
-                    case 4:
-                        System.out.println("\nEditing Bio...");
-                        break;
-                    case 5:
-                        System.out.println("\nEditing QBit Rate...");
-                        break;
-                    case 6:
-                        System.out.println("\nEditing Availability...");
-                        setAvailability(writer, reader, scanner);
-                        break;
-                    case 7:
-                        exitMenu = true;
-                        break;
-                    default:
-                        System.out.println("\nInvalid choice.");
-                        break;
+                // Check if the input is an integer
+                if (scanner.hasNextInt()) {
+                    int choice = scanner.nextInt();
+                    switch (choice) {
+                        case 1:
+                            System.out.println("\nEditing Name...");
+                            break;
+                        case 2:
+                            System.out.println("\nEditing Alias...");
+                            break;
+                        case 3:
+                            System.out.println("\nEditing Idol Type...");
+                            break;
+                        case 4:
+                            System.out.println("\nEditing Bio...");
+                            break;
+                        case 5:
+                            System.out.println("\nEditing QBit Rate...");
+                            break;
+                        case 6:
+                            System.out.println("\nEditing Availability...");
+                            setAvailability(writer, reader, scanner);
+                            break;
+                        case 7:
+                            exitMenu = true;
+                            break;
+                        default:
+                            System.out.println("\nInvalid choice. Please enter a valid option.");
+                            break;
+                    }
+                } else {
+                    // Consume non-integer input
+                    scanner.next();
+                    System.out.println("\nInvalid choice. Please enter a valid integer option.");
                 }
-                System.out.println();
             } while (!exitMenu);
         } finally {
             // Close the socket after all operations are done
@@ -316,11 +352,10 @@ public class Client {
         }
     }
 
-
     private static void setAvailability(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
 
         // Get idol details from the user
-        System.out.print("\nEnter your day of availability (e.g. Monday): ");
+        System.out.print("\nEnter your day of availability (e.g. Monday): \n");
         String availableDay = scanner.nextLine(); // Consume the newline character
         availableDay = scanner.nextLine();
 

@@ -6,9 +6,9 @@ import java.sql.*;
 
 public class Server {
     private static final int PORT = 12345;
-    private static final String URL = "jdbc:mysql://localhost:3306/teamsea";
+    private static final String URL = "jdbc:mysql://localhost:3306/eyeball";
     private static final String USER = "root";
-    private static final String PASSWORD = "ComSci_CS221";
+    private static final String PASSWORD = null;
 
     public static void main(String[] args) {
         try {
@@ -54,11 +54,16 @@ public class Server {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
 
-                String request = reader.readLine();
-
-                if (request != null) {
+                String request;
+                while ((request = reader.readLine()) != null) {
                     String[] requestData = request.split(",");
                     String requestType = requestData[0];
+
+                    if (requestType.equals("LOGOUT")) {
+                        // Handle logout
+                        System.out.println("Client logged out: " + clientSocket.getInetAddress());
+                        break; // Exit the loop to end the client thread
+                    }
 
                     if (requestType.equals("REGISTER_FAN")) {
                         // Handle fan registration
@@ -77,7 +82,6 @@ public class Server {
                         writer.flush();
                     }
                 }
-
                 writer.close();
                 reader.close();
                 clientSocket.close();
@@ -190,10 +194,12 @@ public class Server {
             // Send response to client based on whether email exists in either table
             if (fanResult.next()) {
                 String fanID = fanResult.getString("fanID");
-                writer.write("FAN_LOGIN_SUCCESS" + fanID + "\n");
+                writer.write("FAN_LOGIN_SUCCESS," + fanID + "\n");
+                System.out.println("Client logged in: " + clientSocket.getInetAddress());
             } else if (idolResult.next()) {
                 String idolID = idolResult.getString("IdolID");
                 writer.write("IDOL_LOGIN_SUCCESS," + idolID + "\n");
+                System.out.println("Client logged in: " + clientSocket.getInetAddress());
             } else {
                 writer.write("LOGIN_FAILED\n");
             }
