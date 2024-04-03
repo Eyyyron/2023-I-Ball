@@ -96,16 +96,26 @@ public class Server {
             String birthdate = data[6];
             String fanBio = data[7];
 
+            // Get the highest fanID from the FAN table
+            String query = "SELECT MAX(FanID) FROM FAN";
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+            int fanID = 1; // Initialize fanID to 1
+            if (resultSet.next()) {
+                fanID = resultSet.getInt(1) + 1; // Increase the fanID by 1
+            }
+
             // Perform fan registration
-            String query = "INSERT INTO FAN (FanFullName, Username, FanEmail, FanPassword, Gender, Birthdate, FanBio) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            query = "INSERT INTO FAN (FanID, FanFullName, Username, FanEmail, FanPassword, Gender, Birthdate, FanBio) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, fanFullName);
-            preparedStatement.setString(2, username);
-            preparedStatement.setString(3, fanEmail);
-            preparedStatement.setString(4, fanPassword);
-            preparedStatement.setString(5, gender);
-            preparedStatement.setString(6, birthdate);
-            preparedStatement.setString(7, fanBio);
+            preparedStatement.setInt(1, fanID);
+            preparedStatement.setString(2, fanFullName);
+            preparedStatement.setString(3, username);
+            preparedStatement.setString(4, fanEmail);
+            preparedStatement.setString(5, fanPassword);
+            preparedStatement.setString(6, gender);
+            preparedStatement.setString(7, birthdate);
+            preparedStatement.setString(8, fanBio);
             int rowsAffected = preparedStatement.executeUpdate();
 
             // Send response to client
@@ -127,16 +137,26 @@ public class Server {
             String idolBio = data[6];
             String qbitRatePer10Mins = data[7];
 
+            // Get the highest fanID from the IDOL table
+            String query = "SELECT MAX(IdolID) FROM IDOL";
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+            int idolID = 1; // Initialize fanID to 1
+            if (resultSet.next()) {
+                idolID = resultSet.getInt(1) + 1; // Increase the fanID by 1
+            }
+
             // Perform idol registration
-            String query = "INSERT INTO IDOL (IdolFullName, Alias, IdolEmail, IdolPassword, IdolType, IdolBio, QbitRatePer10Mins) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            query = "INSERT INTO IDOL (IdolID, IdolFullName, Alias, IdolEmail, IdolPassword, IdolType, IdolBio, QbitRatePer10Mins) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, idolFullName);
-            preparedStatement.setString(2, alias);
-            preparedStatement.setString(3, idolEmail);
-            preparedStatement.setString(4, idolPassword);
-            preparedStatement.setString(5, idolType);
-            preparedStatement.setString(6, idolBio);
-            preparedStatement.setString(7, qbitRatePer10Mins);
+            preparedStatement.setInt(1, idolID);
+            preparedStatement.setString(2, idolFullName);
+            preparedStatement.setString(3, alias);
+            preparedStatement.setString(4, idolEmail);
+            preparedStatement.setString(5, idolPassword);
+            preparedStatement.setString(6, idolType);
+            preparedStatement.setString(7, idolBio);
+            preparedStatement.setString(8, qbitRatePer10Mins);
             int rowsAffected = preparedStatement.executeUpdate();
 
             // Send response to client
