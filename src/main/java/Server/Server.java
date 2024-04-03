@@ -6,9 +6,9 @@ import java.sql.*;
 
 public class Server {
     private static final int PORT = 12345;
-    private static final String URL = "jdbc:mysql://localhost:3306/eyeball";
+    private static final String URL = "jdbc:mysql://localhost:3306/teamsea";
     private static final String USER = "root";
-    private static final String PASSWORD = null;
+    private static final String PASSWORD = "ComSci_CS221";
 
     public static void main(String[] args) {
         try {
@@ -77,6 +77,9 @@ public class Server {
                     } else if (requestType.equals("SET_AVAILABILITY")) {
                         // Handle setting availability of idol
                         setAvailability(requestData, writer);
+                    } else if (requestType.equals("VIEW_SCHEDULES")){
+                        // Handle viewing schedules of idols
+                        viewSchedules(requestData, writer);
                     } else {
                         writer.write("Invalid request\n");
                         writer.flush();
@@ -213,21 +216,88 @@ public class Server {
             String startTime = data[3];
             String endTime = data[4];
 
-            // Perform scheduling of availability
-            String query = "INSERT INTO AVAILABILITY (IdolID, AvailableDay, StartTime, EndTime) VALUES (?, ?, ?, ?)";
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, idolID);
-            preparedStatement.setString(2, availableDay);
-            preparedStatement.setString(3, startTime);
-            preparedStatement.setString(4, endTime);
-            int rowsAffected = preparedStatement.executeUpdate();
+            // Check if the idol already has an availability for the given day
+            String checkQuery = "SELECT COUNT(*) FROM AVAILABILITY WHERE IdolID =? AND AvailableDay =?";
+            PreparedStatement checkStatement = connection.prepareStatement(checkQuery);
+            checkStatement.setString(1, idolID);
+            checkStatement.setString(2, availableDay);
+            ResultSet checkResult = checkStatement.executeQuery();
+            checkResult.next();
+            int availabilityCount = checkResult.getInt(1);
 
-            // Send response to client
-            if (rowsAffected > 0) {
-                writer.write("Availability Schedule Successfully Set\n");
+            if (availabilityCount > 0) {
+                // The idol already has an availability for the given day, so update it
+                String updateQuery = "UPDATE AVAILABILITY SET StartTime =?, EndTime =? WHERE IdolID =? AND AvailableDay =?";
+                PreparedStatement updateStatement = connection.prepareStatement(updateQuery);
+                updateStatement.setString(1, startTime);
+                updateStatement.setString(2, endTime);
+                updateStatement.setString(3, idolID);
+                updateStatement.setString(4, availableDay);
+                updateStatement.executeUpdate();
+
+                // Send the response to the client
+                writer.write("Availability already exists and has been updated.\n");
             } else {
-                writer.write("Setting Availability Schedule Failed\n");
+                // The idol doesn't have an availability for the given day, so insert it
+                String insertQuery = "INSERT INTO AVAILABILITY (IdolID, AvailableDay, StartTime, EndTime) VALUES (?,?,?,?)";
+                PreparedStatement insertStatement = connection.prepareStatement(insertQuery);
+                insertStatement.setString(1, idolID);
+                insertStatement.setString(2, availableDay);
+                insertStatement.setString(3, startTime);
+                insertStatement.setString(4, endTime);
+                insertStatement.executeUpdate();
+
+                // Send the response to the client
+                writer.write("Availability Schedule Successfully Set\n");
             }
+            writer.flush();
+        }
+
+        private void viewSchedules(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            int choice = Integer.parseInt(data[1]);
+            String searchTerm = data[2];
+
+            String query = "";
+            if (choice == 1) {
+                // Query the database to get the schedules for the selected idol alias
+                query = "SELECT IDOL.Alias, AVAILABILITY.AvailableDay, AVAILABILITY.StartTime, AVAILABILITY.EndTime FROM IDOL JOIN AVAILABILITY ON IDOL.IdolID = AVAILABILITY.IdolID WHERE IDOL.Alias LIKE ?";
+            } else if (choice == 2) {
+                // Query the database to get the schedules for the selected available day
+                query = "SELECT IDOL.Alias, AVAILABILITY.AvailableDay, AVAILABILITY.StartTime, AVAILABILITY.EndTime FROM IDOL JOIN AVAILABILITY ON IDOL.IdolID = AVAILABILITY.IdolID WHERE AVAILABILITY.AvailableDay LIKE ?";
+            } else {
+                writer.write("INVALID_CHOICE\n");
+                writer.flush();
+                return;
+            }
+
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, "%" + searchTerm + "%");
+            ResultSet resultSet = statement.executeQuery();
+
+            // Build the schedule string to send to the client
+            StringBuilder scheduleString = new StringBuilder();
+            boolean hasSchedules = false;
+            while (resultSet.next()) {
+                if (hasSchedules) {
+                    scheduleString.append(",");
+                } else {
+                    hasSchedules = true;
+                }
+
+                String idolFullName = resultSet.getString("Alias");
+                String availableDayResult = resultSet.getString("AvailableDay");
+                String startTime = resultSet.getString("StartTime");
+                String endTime = resultSet.getString("EndTime");
+                scheduleString.append(idolFullName).append("|").append(availableDayResult).append("|").append(startTime).append("|").append(endTime);
+            }
+
+            // Send the response to the client
+            if (hasSchedules) {
+                writer.write("SCHEDULES_FOUND\n");
+            } else {
+                writer.write("NO_SCHEDULES_FOUND\n");
+            }
+            writer.write(scheduleString.toString() + "\n");
             writer.flush();
         }
     }
