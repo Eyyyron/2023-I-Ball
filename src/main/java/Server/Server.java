@@ -234,12 +234,7 @@ public class Server {
             writer.flush();
         }
         private static void viewFeedbacks(Connection connection, BufferedWriter writer, int idolID) throws SQLException, IOException {
-            String query = "SELECT f.FanFullName, i.IdolFullName, fbd.Rating, fbd.Comment " +
-                    "FROM fan f " +
-                    "JOIN meetup m ON f.FanID = m.FanID " +
-                    "JOIN idol i ON m.IdolID = i.IdolID " +
-                    "JOIN feedback fbd ON m.MeetupID = fbd.MeetupID " +
-                    "WHERE m.IdolID = ?";
+            String query = "SELECT * FROM FEEDBACK WHERE MeetupID IN (SELECT MeetupID FROM MEETUP WHERE IdolID = ?)";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, idolID);
             ResultSet resultSet = statement.executeQuery();
