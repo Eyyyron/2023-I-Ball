@@ -294,7 +294,6 @@ public class Client {
                         break;
                     case 6:
                         System.out.println("\nEditing Availability...");
-                        Duration delay = Duration.ofMillis(1000); // Set the delay to 1 second
                         setAvailability(writer, reader, scanner);
                         break;
                     case 7:
