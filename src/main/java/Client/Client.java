@@ -173,7 +173,8 @@ public class Client {
                 break;
             case 4:
                 System.out.println("\nViewing feedbacks...");
-                viewFeedbacks(writer, reader, scanner);
+                requestViewFeedbacks(writer);
+                receiveFeedbacks(reader);
                 break;
             case 5:
                 System.out.println("\nLogging out...");
@@ -341,23 +342,17 @@ public class Client {
         System.out.println("\nServer response: " + response);
     }
 
-    private static void viewFeedbacks(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
-        // Send feedbacks request to the server
-        writer.write("VIEW_FEEDBACKS," + idolID + "\n");
+    private static void requestViewFeedbacks(BufferedWriter writer) throws IOException {
+        writer.write("VIEW_FEEDBACKS," + idolID + "\n"); // Send idolID along with the request
         writer.flush();
+    }
 
+    private static void receiveFeedbacks(BufferedReader reader) throws IOException {
         // Receive and display feedbacks from the server
-        String feedbackLine;
-        while ((feedbackLine = reader.readLine()) != null && !feedbackLine.equals("END_OF_FEEDBACK")) {
-            String[] feedbackData = feedbackLine.split(",");
-            if (feedbackData.length >= 5) {
-                System.out.println("\nFan Full Name: " + feedbackData[1]);
-                System.out.println("Idol Full Name: " + feedbackData[2]);
-                System.out.println("Rating: " + feedbackData[3]);
-                System.out.println("Comment: " + feedbackData[4]);
-            } else {
-                System.out.println("\nInvalid feedback data format.");
-            }
+        String line;
+        while ((line = reader.readLine()) != null && !line.isEmpty()) {
+            System.out.println(line);
         }
     }
+
 }

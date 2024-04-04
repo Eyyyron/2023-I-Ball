@@ -8,7 +8,8 @@ public class Server {
     private static final int PORT = 12345;
     private static final String URL = "jdbc:mysql://localhost:3306/teamsea";
     private static final String USER = "root";
-    private static final String PASSWORD = "null";
+    private static final String PASSWORD = "LimbusCompany";
+
 
     public static void main(String[] args) {
         try {
@@ -72,15 +73,8 @@ public class Server {
                     } else if (requestType.equals("SET_AVAILABILITY")) {
                         // Handle setting availability of idol
                         setAvailability(requestData, writer);
-                    }else if (requestType.equals("VIEW_FEEDBACKS")) {
-                        requestData = request.split(",");
-                        int idolID = Integer.parseInt(requestData[1]);
-
-                        try {
-                            viewFeedbacks(connection, writer, idolID);
-                        } catch (SQLException | IOException e) {
-                            e.printStackTrace();
-                        }
+                    } else if (requestType.equals("VIEW_FEEDBACKS")){
+                        handleViewFeedbacks(requestData[1], writer);
                     } else {
                         writer.write("Invalid request\n");
                         writer.flush();
@@ -233,23 +227,40 @@ public class Server {
             }
             writer.flush();
         }
-        private static void viewFeedbacks(Connection connection, BufferedWriter writer, int idolID) throws SQLException, IOException {
-            String query = "SELECT * FROM FEEDBACK WHERE MeetupID IN (SELECT MeetupID FROM MEETUP WHERE IdolID = ?)";
-            PreparedStatement statement = connection.prepareStatement(query);
-            statement.setInt(1, idolID);
-            ResultSet resultSet = statement.executeQuery();
 
+
+        public void viewFeedback(String idolID, BufferedWriter writer) throws SQLException, IOException {
+            // Get feedback for the specified idol
+            String query = "SELECT FanID, Rating, Comment FROM FEEDBACK WHERE MeetupID IN (SELECT MeetupID FROM MEETUP WHERE IdolID = ?)";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, idolID);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            // Display feedback to the idol
             while (resultSet.next()) {
-                String fanFullName = resultSet.getString("FanFullName");
-                String idolFullName = resultSet.getString("IdolFullName");
+                String fanID = resultSet.getString("FanID");
                 int rating = resultSet.getInt("Rating");
                 String comment = resultSet.getString("Comment");
-                writer.write("FEEDBACK," + fanFullName + "," + idolFullName + "," + rating + "," + comment + "\n");
-                writer.flush();
+
+                // Write feedback to the client
+                writer.write("Fan ID: " + fanID + "\n");
+                writer.write("Rating: " + rating + "\n");
+                writer.write("Comment: " + comment + "\n");
+                writer.write("-------------------\n");
             }
-            writer.write("END_OF_FEEDBACK\n");
+            if (!resultSet.first()) {
+                writer.write("No feedback found for Idol " + idolID + "\n");
+            }
             writer.flush();
         }
+
+        private void handleViewFeedbacks(String request, BufferedWriter writer) throws SQLException, IOException {
+            String[] requestData = request.split(",");
+            String idolID = requestData[1];
+
+            viewFeedback(idolID, writer);
+        }
+
     }
 
 }
