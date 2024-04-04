@@ -81,6 +81,25 @@ public class Server {
                         writer.write("Invalid request\n");
                         writer.flush();
                     }
+                    if (request.startsWith("BROWSE_IDOLS")) {
+                        List<String> idols = getIdols(); // Assuming you have a method to get idol info
+                        for (String idol : idols) {
+                            writer.write(idol + "\n");
+                            writer.flush();
+                        }
+                        writer.write("END_OF_LIST\n"); // Signal end of list
+                        writer.flush();
+                    }
+                    if (requestType.equals("BROWSE_IDOLS")) {
+                        String day = requestData[1]; // The day will be sent by the client
+                        List<String> idols = getIdols(day);
+                        for (String idol : idols) {
+                            writer.write(idol + "\n");
+                        }
+                        writer.write("END_OF_LIST\n"); // Indicate the end of the list
+                        writer.flush();
+                    }
+
                 }
                 writer.close();
                 reader.close();
@@ -170,6 +189,27 @@ public class Server {
                 writer.write("Idol Registration Failed\n");
             }
             writer.flush();
+        }
+        private List<String> getIdols(String day) throws SQLException {
+            List<String> idols = new ArrayList<>();
+            // Join the AVAILABILITY and IDOL tables to fetch idol details along with their availability
+            String query = "SELECT i.IdolFullName, i.Alias, i.IdolType, a.AvailableDay, a.StartTime, a.EndTime " +
+                    "FROM AVAILABILITY a JOIN IDOL i ON a.IdolID = i.IdolID " +
+                    "WHERE a.AvailableDay = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+                preparedStatement.setString(1, day);
+                ResultSet resultSet = preparedStatement.executeQuery();
+                while (resultSet.next()) {
+                    String idolFullName = resultSet.getString("IdolFullName");
+                    String alias = resultSet.getString("Alias");
+                    String idolType = resultSet.getString("IdolType");
+                    Time startTime = resultSet.getTime("StartTime");
+                    Time endTime = resultSet.getTime("EndTime");
+                    idols.add("Name: " + idolFullName + ", Alias: " + alias + ", Type: " + idolType +
+                            ", Available: " + day + ", From: " + startTime + ", To: " + endTime);
+                }
+            }
+            return idols;
         }
 
         private void login(String[] data, BufferedWriter writer) throws SQLException, IOException {
