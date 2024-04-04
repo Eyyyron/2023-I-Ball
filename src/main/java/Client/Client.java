@@ -311,15 +311,19 @@ public class Client {
                     switch (choice) {
                         case 1:
                             System.out.println("\nEditing Name...");
+                            editProfileField(writer, reader, scanner, "IdolFullName", idolID);
                             break;
                         case 2:
                             System.out.println("\nEditing Alias...");
+                            editProfileField(writer, reader, scanner, "Alias", idolID);
                             break;
                         case 3:
                             System.out.println("\nEditing Idol Type...");
+                            editProfileField(writer, reader, scanner, "IdolType", idolID);
                             break;
                         case 4:
                             System.out.println("\nEditing Bio...");
+                            editProfileField(writer, reader, scanner, "IdolBio", idolID);
                             break;
                         case 5:
                             System.out.println("\nEditing QBit Rate...");
@@ -376,5 +380,27 @@ public class Client {
         // Receive and display server response
         String response = reader.readLine();
         System.out.println("\nServer response: " + response);
+    }
+
+    private static void editProfileField(BufferedWriter writer, BufferedReader reader, Scanner scanner, String field, String idValue) throws IOException {
+        // Get the new value for the field from the user
+        System.out.print("\nEnter the new " + field + ": ");
+        String newValue = scanner.nextLine(); // Consume the newline character
+        newValue = scanner.nextLine(); // Read the new value
+
+        try {
+            Socket socket = new Socket(serverIP, serverPort);
+            BufferedWriter socketWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            BufferedReader socketReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            
+            String query = "UPDATE IDOL SET " + field + " = '" + newValue + "' WHERE IdolID = '" + idValue + "'";
+            socketWriter.write("UPDATE_PROFILE_FIELD," + idValue + "," + field + "," + newValue + "\n");
+            socketWriter.flush();
+            
+            String response = socketReader.readLine();
+            System.out.println("\nServer response: " + response);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

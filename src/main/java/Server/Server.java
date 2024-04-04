@@ -77,6 +77,9 @@ public class Server {
                     } else if (requestType.equals("SET_AVAILABILITY")) {
                         // Handle setting availability of idol
                         setAvailability(requestData, writer);
+                    } else if (requestType.equals("UPDATE_PROFILE_FIELD")) {
+                        // Handle updating profile field of idol
+                        editProfileField(requestData, writer);
                     } else {
                         writer.write("Invalid request\n");
                         writer.flush();
@@ -227,6 +230,45 @@ public class Server {
                 writer.write("Availability Schedule Successfully Set\n");
             } else {
                 writer.write("Setting Availability Schedule Failed\n");
+            }
+            writer.flush();
+        }
+
+        private void editProfileField(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            String idolID = data[1];
+            String fieldToEdit = data[2];
+            fieldToEdit = fieldToEdit.toLowerCase(); // Convert to lowercase
+            String newValue = data[3];
+
+            String query = "";
+            switch (fieldToEdit) {
+                case "idolfullname":
+                    query = "UPDATE idol SET IdolFullName = ? WHERE IdolID = ?";
+                    break;
+                case "alias":
+                    query = "UPDATE idol SET Alias = ? WHERE IdolID = ?";
+                    break;
+                case "idoltype":
+                    query = "UPDATE idol SET IdolType = ? WHERE IdolID = ?";
+                    break;
+                case "idolbio":
+                    query = "UPDATE idol SET IdolBio = ? WHERE IdolID = ?";
+                    break;
+                default:
+                    writer.write("Invalid field to edit\n");
+                    writer.flush();
+                    return;
+            }
+
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, newValue);
+            preparedStatement.setString(2, idolID); // Assuming idolID is accessible here
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            if (rowsAffected > 0) {
+                writer.write("Profile field successfully updated\n");
+            } else {
+                writer.write("Failed to update profile field\n");
             }
             writer.flush();
         }
