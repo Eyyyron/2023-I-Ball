@@ -80,6 +80,9 @@ public class Server {
                     } else if (requestType.equals("UPDATE_PROFILE_FIELD")) {
                         // Handle updating profile field of idol
                         editProfileField(requestData, writer);
+                    }else if (requestType.equals("UPDATE_PAYMENT_METHOD")) {
+                        // Handle updating payment method
+                        updatePaymentMethod(requestData, writer);
                     } else {
                         writer.write("Invalid request\n");
                         writer.flush();
@@ -269,6 +272,27 @@ public class Server {
                 writer.write("Profile field successfully updated\n");
             } else {
                 writer.write("Failed to update profile field\n");
+            }
+            writer.flush();
+        }
+
+        private void updatePaymentMethod(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            String fanId = data[1];
+            String meetupId = data[2];
+            String paymentMethod = data[3];
+
+            String query = "UPDATE payment SET PaymentMode = ? WHERE FanID = ? AND SlotID = ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, paymentMethod);
+            preparedStatement.setString(2, fanId);
+            preparedStatement.setString(3, meetupId);
+
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            if (rowsAffected > 0) {
+                writer.write("Payment method updated successfully\n");
+            } else {
+                writer.write("Failed to update payment method\n");
             }
             writer.flush();
         }

@@ -403,4 +403,51 @@ public class Client {
             e.printStackTrace();
         }
     }
+
+    private static void choosePaymentMethod(Scanner scanner, String fanId, String meetupId) {
+        System.out.println("\nSelect a payment method:");
+        System.out.println("1. PayPal");
+        System.out.println("2. Credit Card");
+        System.out.println("3. Debit Card");
+        System.out.println("4. GCash");
+
+        System.out.print("Enter your choice: ");
+        int choice = scanner.nextInt();
+
+        String paymentMethod = "";
+        switch (choice) {
+            case 1:
+                paymentMethod = "PayPal";
+                break;
+            case 2:
+                paymentMethod = "Credit Card";
+                break;
+            case 3:
+                paymentMethod = "Debit Card";
+                break;
+            case 4:
+                paymentMethod = "GCash";
+                break;
+            default:
+                System.out.println("Invalid choice. Please try again.");
+                break;
+        }
+
+        if (!paymentMethod.isEmpty()) {
+            try {
+                Socket socket = new Socket(serverIP, serverPort);
+                BufferedWriter socketWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+                BufferedReader socketReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+                String query = "UPDATE payment SET PaymentMode = '" + paymentMethod + "' WHERE FanID = '" + fanId + "' AND MeetupID = '" + meetupId + "'";
+                socketWriter.write("UPDATE_PAYMENT_METHOD," + fanId + "," + meetupId + "," + paymentMethod + "\n");
+                socketWriter.flush();
+
+                String response = socketReader.readLine();
+                System.out.println("\nServer response: " + response);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }
