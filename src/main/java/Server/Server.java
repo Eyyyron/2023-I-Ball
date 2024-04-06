@@ -24,7 +24,7 @@ public class Server {
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                //System.out.println("\nClient connected: " + clientSocket.getInetAddress());
+                System.out.println("\nClient connected: " + clientSocket.getInetAddress());
 
                 // Handle client requests in a separate thread
                 Thread clientThread = new Thread(new ClientHandler(clientSocket));
@@ -54,16 +54,11 @@ public class Server {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
 
-                String request;
-                while ((request = reader.readLine()) != null) {
+                String request = reader.readLine();
+
+                if (request != null) {
                     String[] requestData = request.split(",");
                     String requestType = requestData[0];
-
-                    if (requestType.equals("LOGOUT")) {
-                        // Handle logout
-                        System.out.println("\nClient logged out: " + clientSocket.getInetAddress());
-                        break; // Exit the loop to end the client thread
-                    }
 
                     if (requestType.equals("REGISTER_FAN")) {
                         // Handle fan registration
@@ -74,14 +69,15 @@ public class Server {
                     } else if (requestType.equals("LOGIN")) {
                         // Handle login
                         login(requestData, writer);
-                    } else if (requestType.equals("SET_AVAILABILITY")) {
-                        // Handle setting availability of idol
-                        setAvailability(requestData, writer);
+                    } else if (requestType.equals("CONNECT_TO_ROOM")) {
+                        // Handle room connection request
+                        connectToRoom(requestData, writer);
                     } else {
                         writer.write("Invalid request\n");
                         writer.flush();
                     }
                 }
+
                 writer.close();
                 reader.close();
                 clientSocket.close();
@@ -100,26 +96,16 @@ public class Server {
             String birthdate = data[6];
             String fanBio = data[7];
 
-            // Get the highest fanID from the FAN table
-            String query = "SELECT MAX(FanID) FROM FAN";
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(query);
-            int fanID = 1; // Initialize fanID to 1
-            if (resultSet.next()) {
-                fanID = resultSet.getInt(1) + 1; // Increase the fanID by 1
-            }
-
             // Perform fan registration
-            query = "INSERT INTO FAN (FanID, FanFullName, Username, FanEmail, FanPassword, Gender, Birthdate, FanBio) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            String query = "INSERT INTO FAN (FanFullName, Username, FanEmail, FanPassword, Gender, Birthdate, FanBio) VALUES (?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setInt(1, fanID);
-            preparedStatement.setString(2, fanFullName);
-            preparedStatement.setString(3, username);
-            preparedStatement.setString(4, fanEmail);
-            preparedStatement.setString(5, fanPassword);
-            preparedStatement.setString(6, gender);
-            preparedStatement.setString(7, birthdate);
-            preparedStatement.setString(8, fanBio);
+            preparedStatement.setString(1, fanFullName);
+            preparedStatement.setString(2, username);
+            preparedStatement.setString(3, fanEmail);
+            preparedStatement.setString(4, fanPassword);
+            preparedStatement.setString(5, gender);
+            preparedStatement.setString(6, birthdate);
+            preparedStatement.setString(7, fanBio);
             int rowsAffected = preparedStatement.executeUpdate();
 
             // Send response to client
@@ -141,26 +127,16 @@ public class Server {
             String idolBio = data[6];
             String qbitRatePer10Mins = data[7];
 
-            // Get the highest fanID from the IDOL table
-            String query = "SELECT MAX(IdolID) FROM IDOL";
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(query);
-            int idolID = 1; // Initialize fanID to 1
-            if (resultSet.next()) {
-                idolID = resultSet.getInt(1) + 1; // Increase the fanID by 1
-            }
-
             // Perform idol registration
-            query = "INSERT INTO IDOL (IdolID, IdolFullName, Alias, IdolEmail, IdolPassword, IdolType, IdolBio, QbitRatePer10Mins) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            String query = "INSERT INTO IDOL (IdolFullName, Alias, IdolEmail, IdolPassword, IdolType, IdolBio, QbitRatePer10Mins) VALUES (?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setInt(1, idolID);
-            preparedStatement.setString(2, idolFullName);
-            preparedStatement.setString(3, alias);
-            preparedStatement.setString(4, idolEmail);
-            preparedStatement.setString(5, idolPassword);
-            preparedStatement.setString(6, idolType);
-            preparedStatement.setString(7, idolBio);
-            preparedStatement.setString(8, qbitRatePer10Mins);
+            preparedStatement.setString(1, idolFullName);
+            preparedStatement.setString(2, alias);
+            preparedStatement.setString(3, idolEmail);
+            preparedStatement.setString(4, idolPassword);
+            preparedStatement.setString(5, idolType);
+            preparedStatement.setString(6, idolBio);
+            preparedStatement.setString(7, qbitRatePer10Mins);
             int rowsAffected = preparedStatement.executeUpdate();
 
             // Send response to client
@@ -193,42 +169,40 @@ public class Server {
 
             // Send response to client based on whether email exists in either table
             if (fanResult.next()) {
-                String fanID = fanResult.getString("fanID");
-                writer.write("FAN_LOGIN_SUCCESS," + fanID + "\n");
-                System.out.println("\nClient logged in: " + clientSocket.getInetAddress());
+                writer.write("FAN_LOGIN_SUCCESS\n");
             } else if (idolResult.next()) {
-                String idolID = idolResult.getString("IdolID");
-                writer.write("IDOL_LOGIN_SUCCESS," + idolID + "\n");
-                System.out.println("\nClient logged in: " + clientSocket.getInetAddress());
+                writer.write("IDOL_LOGIN_SUCCESS\n");
             } else {
                 writer.write("LOGIN_FAILED\n");
             }
             writer.flush();
         }
 
-        private void setAvailability(String[] data, BufferedWriter writer) throws SQLException, IOException {
-            // Extract availability details from data array
-            String idolID = data[1];
-            String availableDay = data[2];
-            String startTime = data[3];
-            String endTime = data[4];
+        private void connectToRoom(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            String meetupId = data[1];
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM meetup WHERE MeetupID = ?");
+            statement.setString(1, meetupId);
+            ResultSet resultSet = statement.executeQuery();
 
-            // Perform scheduling of availability
-            String query = "INSERT INTO AVAILABILITY (IdolID, AvailableDay, StartTime, EndTime) VALUES (?, ?, ?, ?)";
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, idolID);
-            preparedStatement.setString(2, availableDay);
-            preparedStatement.setString(3, startTime);
-            preparedStatement.setString(4, endTime);
-            int rowsAffected = preparedStatement.executeUpdate();
+            if (resultSet.next()) {
+                // Send the content of the row corresponding to the meetup ID back to the client
+                int meetupID = resultSet.getInt("MeetupID");
+                int fanID = resultSet.getInt("FanID");
+                int idolID = resultSet.getInt("IdolID");
+                int duration = resultSet.getInt("DurationInMinutes");
+                String scheduledDate = resultSet.getString("ScheduledDate");
+                String scheduledTime = resultSet.getString("ScheduledTime");
+                String status = resultSet.getString("Status");
 
-            // Send response to client
-            if (rowsAffected > 0) {
-                writer.write("Availability Schedule Successfully Set\n");
+                String meetupInfo = String.format("MeetupID: %d, FanID: %d, IdolID: %d, Duration: %d minutes, ScheduledDate: %s, ScheduledTime: %s, Status: %s",
+                        meetupID, fanID, idolID, duration, scheduledDate, scheduledTime, status);
+
+                writer.write(meetupInfo + "\n");
             } else {
-                writer.write("Setting Availability Schedule Failed\n");
+                writer.write("Invalid meetup ID\n");
             }
             writer.flush();
         }
     }
-}
+
+    }
