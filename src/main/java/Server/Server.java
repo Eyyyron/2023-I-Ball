@@ -3,6 +3,8 @@ package Server;
 import java.io.*;
 import java.net.*;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Server {
     private static final int PORT = 12345;
@@ -81,24 +83,17 @@ public class Server {
                         writer.write("Invalid request\n");
                         writer.flush();
                     }
-                    if (request.startsWith("BROWSE_IDOLS")) {
-                        List<String> idols = getIdols(); // Assuming you have a method to get idol info
-                        for (String idol : idols) {
-                            writer.write(idol + "\n");
-                            writer.flush();
-                        }
-                        writer.write("END_OF_LIST\n"); // Signal end of list
-                        writer.flush();
-                    }
                     if (requestType.equals("BROWSE_IDOLS")) {
-                        String day = requestData[1]; // The day will be sent by the client
-                        List<String> idols = getIdols(day);
+                        String searchType = requestData[1]; // "DAY" or "ALIAS"
+                        String searchValue = requestData[2]; // the actual day or alias
+                        List<String> idols = getIdols(searchType, searchValue);
                         for (String idol : idols) {
                             writer.write(idol + "\n");
                         }
-                        writer.write("END_OF_LIST\n"); // Indicate the end of the list
+                        writer.write("END_OF_LIST\n");
                         writer.flush();
                     }
+
 
                 }
                 writer.close();
@@ -190,27 +185,45 @@ public class Server {
             }
             writer.flush();
         }
-        private List<String> getIdols(String day) throws SQLException {
+        private List<String> getIdols(String searchType, String searchValue) throws SQLException {
             List<String> idols = new ArrayList<>();
-            // Join the AVAILABILITY and IDOL tables to fetch idol details along with their availability
-            String query = "SELECT i.IdolFullName, i.Alias, i.IdolType, a.AvailableDay, a.StartTime, a.EndTime " +
-                    "FROM AVAILABILITY a JOIN IDOL i ON a.IdolID = i.IdolID " +
-                    "WHERE a.AvailableDay = ?";
+            String query = "";
+
+            if (searchType.equals("DAY")) {
+                query = "SELECT i.IdolFullName, i.Alias, i.IdolType, i.QBitRatePer10Mins, a.AvailableDay, a.StartTime, a.EndTime " +
+                        "FROM AVAILABILITY a JOIN IDOL i ON a.IdolID = i.IdolID " +
+                        "WHERE a.AvailableDay = ?";
+            } else if (searchType.equals("ALIAS")) {
+                query = "SELECT i.IdolFullName, i.Alias, i.IdolType, i.QBitRatePer10Mins, a.AvailableDay, a.StartTime, a.EndTime " +
+                        "FROM IDOL i LEFT JOIN AVAILABILITY a ON i.IdolID = a.IdolID " +
+                        "WHERE i.Alias = ?";
+            }
+
             try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-                preparedStatement.setString(1, day);
+                preparedStatement.setString(1, searchValue);
                 ResultSet resultSet = preparedStatement.executeQuery();
                 while (resultSet.next()) {
                     String idolFullName = resultSet.getString("IdolFullName");
                     String alias = resultSet.getString("Alias");
                     String idolType = resultSet.getString("IdolType");
+                    int qbitRate = resultSet.getInt("QBitRatePer10Mins");
+                    String availableDay = resultSet.getString("AvailableDay");
                     Time startTime = resultSet.getTime("StartTime");
                     Time endTime = resultSet.getTime("EndTime");
-                    idols.add("Name: " + idolFullName + ", Alias: " + alias + ", Type: " + idolType +
-                            ", Available: " + day + ", From: " + startTime + ", To: " + endTime);
+
+                    String result = "Name: " + idolFullName + ", Alias: " + alias + ", Type: " + idolType +
+                            ", QBit Rate: " + qbitRate + " per 10 mins";
+                    if (searchType.equals("DAY")) {
+                        result += ", From: " + startTime + ", To: " + endTime;
+                    } else if (searchType.equals("ALIAS")) {
+                        result += ", Available Day: " + availableDay + ", From: " + startTime + ", To: " + endTime;
+                    }
+                    idols.add(result);
                 }
             }
             return idols;
         }
+
 
         private void login(String[] data, BufferedWriter writer) throws SQLException, IOException {
             // Extract login credentials from data array

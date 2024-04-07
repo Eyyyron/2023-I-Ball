@@ -135,10 +135,12 @@ public class Client {
                         // Placeholder for editing profile
                         break;
                     case 2:
-                        System.out.println("\nEnter the day you want to browse idols for (e.g., 'Monday'):");
-                        scanner.nextLine(); // Clear the scanner buffer
-                        String day = scanner.nextLine();
-                        writer.write("BROWSE_IDOLS," + day + "\n");
+                        System.out.println("\nDo you want to search by day or alias? (Enter 'day' or 'alias'):");
+                        scanner.nextLine(); // Clear the buffer
+                        String searchType = scanner.nextLine().trim().equalsIgnoreCase("day") ? "DAY" : "ALIAS";
+                        System.out.println("Enter the " + (searchType.equals("DAY") ? "day" : "alias") + ":");
+                        String searchValue = scanner.nextLine().trim();
+                        writer.write("BROWSE_IDOLS," + searchType + "," + searchValue + "\n");
                         writer.flush();
 
                         System.out.println("Available Idols:");
@@ -147,6 +149,7 @@ public class Client {
                             System.out.println(response);
                         }
                         break;
+
 
                     case 3:
                         System.out.println("\nViewing interaction history...");
