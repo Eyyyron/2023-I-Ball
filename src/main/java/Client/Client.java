@@ -395,4 +395,27 @@ public class Client {
         System.out.println("\nServer response:");
         System.out.println(response);
     }
+    private static void conductVirtualMeetups(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        // Prompts for conducting a virtual meet-up
+        System.out.println("\nConducting virtual meet-ups...");
+
+        // Common prompts for both fans and idols
+        System.out.print("Enter the meetup ID: ");
+        String meetupId = scanner.nextLine(); // Consume the newline character
+        meetupId = scanner.nextLine(); // Read the meetup ID
+
+        // Send meetup ID to the server for retrieving meetup information
+        writer.write("CONNECT_TO_ROOM," + meetupId + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        System.out.println("\nServer response:");
+        System.out.println(response);
+
+        // Additional prompts for conducting the meet-up
+        System.out.println("\nStarting the virtual meet-up...");
+        System.out.println("You are now connected to the meetup room with ID: " + meetupId);
+        System.out.println("Conduct your meet-up activities here.");
+    }
 }

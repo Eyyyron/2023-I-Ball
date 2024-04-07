@@ -79,6 +79,9 @@ public class Server {
                         connectToRoom(requestData, writer);
                     } else if (requestType.equals("SET_AVAILABILITY")) {
                         // Handle setting availability of idol
+                    } else if (requestType.equals("CONDUCT_VIRTUAL_MEETUP")) {
+                        // Handle conducting virtual meet-up
+                        conductVirtualMeetup(requestData, writer);
                         setAvailability(requestData, writer);
                     } else {
                         writer.write("Invalid request\n");
@@ -258,5 +261,11 @@ public class Server {
             }
             writer.flush();
         }
+        private void conductVirtualMeetup(String[] data, BufferedWriter writer) throws SQLException, IOException {
+          String meetupId = data[1];
+            writer.write("Virtual meetup initiated for meetup ID: " + meetupId + "\n");
+            writer.flush();
+        }
+
     }
 }
