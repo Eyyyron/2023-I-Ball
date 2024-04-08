@@ -134,22 +134,32 @@ public class Client {
                         System.out.println("\nEditing profile...");
                         // Placeholder for editing profile
                         break;
-                    case 2:
-                        System.out.println("\nDo you want to search by day or alias? (Enter 'day' or 'alias'):");
-                        scanner.nextLine(); // Clear the buffer
-                        String searchType = scanner.nextLine().trim().equalsIgnoreCase("day") ? "DAY" : "ALIAS";
-                        System.out.println("Enter the " + (searchType.equals("DAY") ? "day" : "alias") + ":");
-                        String searchValue = scanner.nextLine().trim();
-                        writer.write("BROWSE_IDOLS," + searchType + "," + searchValue + "\n");
-                        writer.flush();
 
-                        System.out.println("Available Idols:");
-                        String response;
-                        while (!(response = reader.readLine()).equals("END_OF_LIST")) {
-                            System.out.println(response);
+                    case 2:
+                        boolean continueBrowsing = true;
+                        while (continueBrowsing) {
+                            System.out.println("\nDo you want to search by day or alias? (Enter 'day' or 'alias'):");
+                            scanner.nextLine(); // Clear the buffer if needed
+                            String searchType = scanner.nextLine().trim().equalsIgnoreCase("day") ? "DAY" : "ALIAS";
+                            System.out.println("Enter the " + (searchType.equals("DAY") ? "day" : "alias") + ":");
+                            String searchValue = scanner.nextLine().trim();
+                            writer.write("BROWSE_IDOLS," + searchType + "," + searchValue + "\n");
+                            writer.flush();
+
+                            System.out.println("Available Idols:");
+                            String response;
+                            while (!(response = reader.readLine()).equals("END_OF_LIST")) {
+                                System.out.println(response);
+                            }
+
+                            // Prompt to continue browsing or return to the menu
+                            System.out.println("\nDo you want to continue browsing idols? (yes/no):");
+                            String answer = scanner.nextLine().trim();
+                            if (answer.equalsIgnoreCase("no")) {
+                                continueBrowsing = false; // Exits the loop and returns to the main menu
+                            }
                         }
                         break;
-
 
                     case 3:
                         System.out.println("\nViewing interaction history...");
