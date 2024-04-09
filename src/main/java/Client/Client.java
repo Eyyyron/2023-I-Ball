@@ -333,6 +333,7 @@ public class Client {
                             break;
                         case 5:
                             System.out.println("\nEditing QBit Rate...");
+                            editQBitRate(writer, reader, scanner);
                             break;
                         case 6:
                             System.out.println("\nEditing Availability...");
@@ -361,6 +362,21 @@ public class Client {
             }
         }
     }
+
+    private static void editQBitRate(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        // Get the new QBit rate from the user
+        System.out.print("\nEnter the new QBit rate per 10 minutes: ");
+        String qbitRatePer10Mins = scanner.nextLine();
+
+        // Send QBit rate update request to the server
+        writer.write("EDIT_QBIT_RATE," + idolID + "," + qbitRatePer10Mins + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        System.out.println("\nServer response: " + response);
+    }
+
 
     private static void setAvailability(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
 

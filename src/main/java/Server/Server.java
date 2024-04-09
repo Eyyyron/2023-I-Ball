@@ -3,6 +3,8 @@ package Server;
 import java.io.*;
 import java.net.*;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Server {
     private static final int PORT = 12345;
@@ -81,15 +83,6 @@ public class Server {
                         writer.write("Invalid request\n");
                         writer.flush();
                     }
-                    if (request.startsWith("BROWSE_IDOLS")) {
-                        List<String> idols = getIdols(); // Assuming you have a method to get idol info
-                        for (String idol : idols) {
-                            writer.write(idol + "\n");
-                            writer.flush();
-                        }
-                        writer.write("END_OF_LIST\n"); // Signal end of list
-                        writer.flush();
-                    }
                     if (requestType.equals("BROWSE_IDOLS")) {
                         String day = requestData[1]; // The day will be sent by the client
                         List<String> idols = getIdols(day);
@@ -98,8 +91,13 @@ public class Server {
                         }
                         writer.write("END_OF_LIST\n"); // Indicate the end of the list
                         writer.flush();
+                    } else if (requestType.equals("EDIT_QBIT_RATE")) {
+                        // Handle editing QBit rate
+                        editQBitRate(requestData, writer);
+                    } else {
+                        writer.write("Invalid request\n");
+                        writer.flush();
                     }
-
                 }
                 writer.close();
                 reader.close();
@@ -267,6 +265,27 @@ public class Server {
                 writer.write("Availability Schedule Successfully Set\n");
             } else {
                 writer.write("Setting Availability Schedule Failed\n");
+            }
+            writer.flush();
+        }
+
+        private void editQBitRate(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            // Extract idol details from data array
+            String idolID = data[1];
+            String qbitRatePer10Mins = data[2];
+
+            // Perform QBit rate update
+            String query = "UPDATE IDOL SET QBitRatePer10Mins =? WHERE IdolID =?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, qbitRatePer10Mins);
+            preparedStatement.setString(2, idolID);
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            // Send response to client
+            if (rowsAffected > 0) {
+                writer.write("QBIT_RATE_EDITED\n");
+            } else {
+                writer.write("QBIT_RATE_EDIT_FAILED\n");
             }
             writer.flush();
         }
