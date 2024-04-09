@@ -80,6 +80,8 @@ public class Server {
                     } else if (requestType.equals("VIEW_SCHEDULES")){
                         // Handle viewing schedules of idols
                         viewSchedules(requestData, writer);
+                    } else if (requestType.equals("VIEW_FEEDBACKS")){
+                        handleViewFeedbacks(requestData[1], writer);
                     } else {
                         writer.write("Invalid request\n");
                         writer.flush();
@@ -300,5 +302,40 @@ public class Server {
             writer.write(scheduleString.toString() + "\n");
             writer.flush();
         }
+
+
+        public void viewFeedback(String idolID, BufferedWriter writer) throws SQLException, IOException {
+            // Get feedback for the specified idol
+            String query = "SELECT FanID, Rating, Comment FROM FEEDBACK WHERE MeetupID IN (SELECT MeetupID FROM MEETUP WHERE IdolID = ?)";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, idolID);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            // Display feedback to the idol
+            while (resultSet.next()) {
+                String fanID = resultSet.getString("FanID");
+                int rating = resultSet.getInt("Rating");
+                String comment = resultSet.getString("Comment");
+
+                // Write feedback to the client
+                writer.write("Fan ID: " + fanID + "\n");
+                writer.write("Rating: " + rating + "\n");
+                writer.write("Comment: " + comment + "\n");
+                writer.write("-------------------\n");
+            }
+            if (!resultSet.first()) {
+                writer.write("No feedback found for Idol " + idolID + "\n");
+            }
+            writer.flush();
+        }
+
+        private void handleViewFeedbacks(String request, BufferedWriter writer) throws SQLException, IOException {
+            String[] requestData = request.split(",");
+            String idolID = requestData[1];
+
+            viewFeedback(idolID, writer);
+        }
+
     }
+
 }

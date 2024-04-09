@@ -2,6 +2,7 @@ package Client;
 
 import java.io.*;
 import java.net.Socket;
+import java.time.Duration;
 import java.util.Scanner;
 
 public class Client {
@@ -199,10 +200,9 @@ public class Client {
                         System.out.println("\nViewing interaction history...");
                         break;
                     case 4:
-                        /**
-                         * PLACEHOLDER FOR (IDOL) VIEWING FEEDBACKS
-                         */
                         System.out.println("\nViewing feedbacks...");
+                        requestViewFeedbacks(writer);
+                        receiveFeedbacks(reader);
                         break;
                     case 5:
                         System.out.println("\nLogging out...");
@@ -449,6 +449,20 @@ public class Client {
         if (!continueViewing) {
             System.out.println("\nReturning to Fan Menu...");
             fanMenu(writer, reader, scanner);
+        }
+    }
+
+
+    private static void requestViewFeedbacks(BufferedWriter writer) throws IOException {
+        writer.write("VIEW_FEEDBACKS," + idolID + "\n"); // Send idolID along with the request
+        writer.flush();
+    }
+
+    private static void receiveFeedbacks(BufferedReader reader) throws IOException {
+        // Receive and display feedbacks from the server
+        String line;
+        while ((line = reader.readLine()) != null && !line.isEmpty()) {
+            System.out.println(line);
         }
     }
 
