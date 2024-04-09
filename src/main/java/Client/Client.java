@@ -133,22 +133,22 @@ public class Client {
                 int choice = scanner.nextInt();
                 switch (choice) {
                     case 1:
-                        System.out.println("\nEditing profile...");
-                        // Placeholder for editing profile
+                        System.out.println("\nEditing Profile...");
+                        menuEditFanProfile(writer, reader, scanner);
                         break;
                     case 2:
-                        System.out.println("\nBrowsing idols...");
+                        System.out.println("\nBrowsing Idols...");
                         // Placeholder for browsing idols
                         break;
                     case 3:
-                        System.out.println("\nViewing interaction history...");
+                        System.out.println("\nViewing Interaction History...");
                         // Placeholder for viewing interaction history
                         break;
                     case 4:
-                        System.out.println("\nBrowsing for available schedules...");
+                        System.out.println("\nViewing Available Idol Schedules...");
                         viewSchedules(writer, reader, scanner);
                     case 5:
-                        System.out.println("\nLogging out...");
+                        System.out.println("\nLogging Out...");
                         System.out.println("\nThank you for using the program.");
                         writer.write("LOGOUT\n");
                         writer.flush();
@@ -184,27 +184,27 @@ public class Client {
                 int choice = scanner.nextInt();
                 switch (choice) {
                     case 1:
-                        System.out.println("\nEditing profile...");
+                        System.out.println("\nEditing Profile...");
                         menuEditIdolProfile(writer, reader, scanner);
                         break;
                     case 2:
                         /**
                          * PLACEHOLDER FOR (IDOL) VIEWING TOTAL EARNINGS
                          */
-                        System.out.println("\nViewing total earnings...");
+                        System.out.println("\nViewing Total Earnings...");
                         break;
                     case 3:
                         /**
                          * PLACEHOLDER FOR (IDOL) VIEWING INTERACTION HISTORY
                          */
-                        System.out.println("\nViewing interaction history...");
+                        System.out.println("\nViewing Interaction History...");
                         break;
                     case 4:
-                        System.out.println("\nViewing feedbacks...");
+                        System.out.println("\nViewing Feedbacks...");
                         viewFeedbacks(writer, reader, scanner);
                         break;
                     case 5:
-                        System.out.println("\nLogging out...");
+                        System.out.println("\nLogging Out...");
                         System.out.println("\nThank you for using the program.");
                         writer.write("LOGOUT\n");
                         writer.flush();
@@ -355,6 +355,67 @@ public class Client {
         }
     }
 
+    private static void menuEditFanProfile(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        boolean exitMenu = false;
+
+        try (Socket socket = new Socket(serverIP, serverPort)) {
+            writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            do {
+                // Edit Profile Menu Options
+                System.out.println("\nFan Edit Profile Menu:");
+                System.out.println("1. Edit Name");
+                System.out.println("2. Edit Username");
+                System.out.println("3. Edit Gender");
+                System.out.println("4. Edit Birthdate");
+                System.out.println("5. Set/Edit Bio");
+                System.out.println("6. Exit Fan Edit Profile Menu");
+                System.out.print("Enter your choice: ");
+
+                // Check if the input is an integer
+                if (scanner.hasNextInt()) {
+                    int choice = scanner.nextInt();
+                    switch (choice) {
+                        case 1:
+                            System.out.println("\nEditing Name...");
+                            break;
+                        case 2:
+                            System.out.println("\nEditing Username...");
+                            break;
+                        case 3:
+                            System.out.println("\nEditing Gender...");
+                            break;
+                        case 4:
+                            System.out.println("\nEditing Birthdate...");
+                            break;
+                        case 5:
+                            System.out.println("\nEditing Bio...");
+                            break;
+                        case 6:
+                            exitMenu = true;
+                            break;
+                        default:
+                            System.out.println("\nInvalid choice. Please enter a valid option.");
+                            break;
+                    }
+                } else {
+                    // Consume non-integer input
+                    scanner.next();
+                    System.out.println("\nInvalid choice. Please enter a valid integer option.");
+                }
+            } while (!exitMenu);
+        } finally {
+            // Close the socket after all operations are done
+            if (writer != null) {
+                writer.close(); // Close the writer
+            }
+            if (reader != null) {
+                reader.close(); // Close the reader
+            }
+        }
+    }
+
     private static void setAvailability(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
 
         // Get idol details from the user
@@ -412,7 +473,7 @@ public class Client {
             // Display the schedule table after receiving the response from the server
             String response = reader.readLine();
             if (response.equals("SCHEDULES_FOUND")) {
-                System.out.println("\nAvailable schedules:");
+                System.out.println("\nAvailable Schedules:");
                 System.out.println("--------------------------------------------------------------------");
                 System.out.println("| Idol                 |  Available Day  | Start Time | End Time   |");
                 System.out.println("--------------------------------------------------------------------");
