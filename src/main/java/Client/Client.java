@@ -299,13 +299,15 @@ public class Client {
             do {
                 // Edit Profile Menu Options
                 System.out.println("\nIdol Edit Profile Menu:");
-                System.out.println("1. Edit Name");
+                System.out.println("1. Edit Full Name");
                 System.out.println("2. Edit Alias");
-                System.out.println("3. Edit Idol Type");
-                System.out.println("4. Set/Edit Bio");
-                System.out.println("5. Edit QBit Rate per Minute");
-                System.out.println("6. Set/Edit Availability");
-                System.out.println("7. Exit Idol Edit Profile Menu");
+                System.out.println("3. Edit Email");
+                System.out.println("4. Edit Password");
+                System.out.println("5. Edit Idol Type");
+                System.out.println("6. Edit Bio");
+                System.out.println("7. Edit QBit Rate per 10 Minutes");
+                System.out.println("8. Edit Availability");
+                System.out.println("9. Exit Idol Edit Profile Menu");
                 System.out.print("Enter your choice: ");
 
                 // Check if the input is an integer
@@ -313,25 +315,38 @@ public class Client {
                     int choice = scanner.nextInt();
                     switch (choice) {
                         case 1:
-                            System.out.println("\nEditing Name...");
+                            System.out.println("\nEditing Full Name...");
+                            editIdolFullName(writer, reader, scanner);
                             break;
                         case 2:
                             System.out.println("\nEditing Alias...");
+                            editIdolAlias(writer, reader, scanner);
                             break;
                         case 3:
-                            System.out.println("\nEditing Idol Type...");
+                            System.out.println("\nEditing Email...");
+                            editIdolEmail(writer, reader, scanner);
                             break;
                         case 4:
-                            System.out.println("\nEditing Bio...");
+                            System.out.println("\nEditing Password...");
+                            editIdolPassword(writer, reader, scanner);
                             break;
                         case 5:
-                            System.out.println("\nEditing QBit Rate...");
+                            System.out.println("\nEditing Idol Type...");
+                            editIdolType(writer, reader, scanner);
                             break;
                         case 6:
+                            System.out.println("\nEditing Bio...");
+                            editIdolBio(writer, reader, scanner);
+                            break;
+                        case 7:
+                            System.out.println("\nEditing QBit Rate per 10 Minutes...");
+                            editIdolQBitRate(writer, reader, scanner);
+                            break;
+                        case 8:
                             System.out.println("\nEditing Availability...");
                             setAvailability(writer, reader, scanner);
                             break;
-                        case 7:
+                        case 9:
                             exitMenu = true;
                             break;
                         default:
@@ -363,14 +378,16 @@ public class Client {
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
             do {
-                // Edit Profile Menu Options
+                // Fan Edit Profile Menu Options
                 System.out.println("\nFan Edit Profile Menu:");
-                System.out.println("1. Edit Name");
+                System.out.println("1. Edit Full Name");
                 System.out.println("2. Edit Username");
-                System.out.println("3. Edit Gender");
-                System.out.println("4. Edit Birthdate");
-                System.out.println("5. Set/Edit Bio");
-                System.out.println("6. Exit Fan Edit Profile Menu");
+                System.out.println("3. Edit Email");
+                System.out.println("4. Edit Password");
+                System.out.println("5. Edit Gender");
+                System.out.println("6. Edit Birthdate");
+                System.out.println("7. Edit Bio");
+                System.out.println("8. Exit Fan Edit Profile Menu");
                 System.out.print("Enter your choice: ");
 
                 // Check if the input is an integer
@@ -378,21 +395,34 @@ public class Client {
                     int choice = scanner.nextInt();
                     switch (choice) {
                         case 1:
-                            System.out.println("\nEditing Name...");
+                            System.out.println("\nEditing Full Name...");
+                            editFanFullName(writer, reader, scanner);
                             break;
                         case 2:
                             System.out.println("\nEditing Username...");
+                            editFanUsername(writer, reader, scanner);
                             break;
                         case 3:
-                            System.out.println("\nEditing Gender...");
+                            System.out.println("\nEditing Email...");
+                            editFanEmail(writer, reader, scanner);
                             break;
                         case 4:
-                            System.out.println("\nEditing Birthdate...");
+                            System.out.println("\nEditing Password...");
+                            editFanPassword(writer, reader, scanner);
                             break;
                         case 5:
-                            System.out.println("\nEditing Bio...");
+                            System.out.println("\nEditing Gender...");
+                            editFanGender(writer, reader, scanner);
                             break;
                         case 6:
+                            System.out.println("\nEditing Birthdate...");
+                            editFanBirthdate(writer, reader, scanner);
+                            break;
+                        case 7:
+                            System.out.println("\nEditing Bio...");
+                            editFanBio(writer, reader, scanner);
+                            break;
+                        case 8:
                             exitMenu = true;
                             break;
                         default:
@@ -414,6 +444,102 @@ public class Client {
                 reader.close(); // Close the reader
             }
         }
+    }
+
+    private static void editIdolFullName(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        System.out.print("\nEnter new name: ");
+        String newName = scanner.nextLine(); // Consume the newline character
+        newName = scanner.nextLine(); // Read the new name
+
+        // Send the new name to the server for updating
+        writer.write("EDIT_IDOL_NAME," + idolID + "," + newName + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        System.out.println("\n" + response);
+    }
+
+    private static void editIdolAlias(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        System.out.print("\nEnter new alias: ");
+        String newAlias = scanner.nextLine(); // Consume the newline character
+        newAlias = scanner.nextLine(); // Read the new alias
+
+        // Send the new alias to the server for updating
+        writer.write("EDIT_IDOL_ALIAS," + idolID + "," + newAlias + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        System.out.println("\n" + response);
+    }
+
+    private static void editIdolEmail(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        System.out.print("\nEnter new email: ");
+        String newEmail = scanner.next(); // Read the new email
+
+        // Send the new email to the server for updating
+        writer.write("EDIT_IDOL_EMAIL," + idolID + "," + newEmail + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        System.out.println("\n" + response);
+    }
+
+    private static void editIdolPassword(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        System.out.print("\nEnter new password: ");
+        String newPassword = scanner.next(); // Read the new password
+
+        // Send the new password to the server for updating
+        writer.write("EDIT_IDOL_PASSWORD," + idolID + "," + newPassword + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        System.out.println("\n" + response);
+    }
+
+    private static void editIdolType(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        System.out.print("\nEnter new idol type: ");
+        String newIdolType = scanner.nextLine(); // Consume the newline character
+        newIdolType = scanner.nextLine(); // Read the new idol type
+
+        // Send the new idol type to the server for updating
+        writer.write("EDIT_IDOL_TYPE," + idolID + "," + newIdolType + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        System.out.println("\n" + response);
+    }
+
+    private static void editIdolBio(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        System.out.print("\nEnter new bio: ");
+        String newBio = scanner.nextLine(); // Consume the newline character
+        newBio = scanner.nextLine(); // Read the new bio
+
+        // Send the new bio to the server for updating
+        writer.write("EDIT_IDOL_BIO," + idolID + "," + newBio + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        System.out.println("\n" + response);
+    }
+
+    private static void editIdolQBitRate(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        System.out.print("\nEnter new QBit Rate per 10 mins: ");
+        String newQBitRate = scanner.nextLine(); // Consume the newline character
+        newQBitRate = scanner.nextLine(); // Read the new QBit Rate
+
+        // Send the new QBit Rate to the server for updating
+        writer.write("EDIT_IDOL_QBIT_RATE," + idolID + "," + newQBitRate + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        System.out.println("\n" + response);
     }
 
     private static void setAvailability(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
@@ -541,6 +667,100 @@ public class Client {
         } else {
             System.out.println("\nUnexpected response from server.");
         }
+    }
+
+    private static void editFanFullName(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        System.out.print("\nEnter new full name: ");
+        String newFullName = scanner.nextLine(); // Consume the newline character
+        newFullName = scanner.nextLine(); // Read the new full name
+
+        // Send the new full name to the server for updating
+        writer.write("EDIT_FAN_FULLNAME," + fanID + "," + newFullName + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        System.out.println("\n" + response);
+    }
+
+    private static void editFanUsername(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        System.out.print("\nEnter new username: ");
+        String newUsername = scanner.nextLine(); // Consume the newline character
+        newUsername = scanner.nextLine(); // Read the new username
+
+        // Send the new username to the server for updating
+        writer.write("EDIT_FAN_USERNAME," + fanID + "," + newUsername + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        System.out.println("\n" + response);
+    }
+
+    private static void editFanEmail(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        System.out.print("\nEnter new email: ");
+        String newEmail = scanner.next(); // Read the new email
+
+        // Send the new email to the server for updating
+        writer.write("EDIT_FAN_EMAIL," + fanID + "," + newEmail + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        System.out.println("\n" + response);
+    }
+
+    private static void editFanPassword(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        System.out.print("\nEnter new password: ");
+        String newPassword = scanner.next(); // Read the new password
+
+        // Send the new password to the server for updating
+        writer.write("EDIT_FAN_PASSWORD," + fanID + "," + newPassword + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        System.out.println("\n" + response);
+    }
+
+    private static void editFanGender(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        System.out.print("\nEnter new gender: ");
+        String newGender = scanner.next(); // Read the new gender
+
+        // Send the new gender to the server for updating
+        writer.write("EDIT_FAN_GENDER," + fanID + "," + newGender + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        System.out.println("\n" + response);
+    }
+
+    private static void editFanBirthdate(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        System.out.print("\nEnter new birthdate (YYYY-MM-DD): ");
+        String newBirthdate = scanner.next(); // Read the new birthdate
+
+        // Send the new birthdate to the server for updating
+        writer.write("EDIT_FAN_BIRTHDATE," + fanID + "," + newBirthdate + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        System.out.println("\n" + response);
+    }
+
+    private static void editFanBio(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        System.out.print("\nEnter new bio: ");
+        String newBio = scanner.nextLine(); // Consume the newline character
+        newBio = scanner.nextLine(); // Read the new bio
+
+        // Send the new bio to the server for updating
+        writer.write("EDIT_FAN_BIO," + fanID + "," + newBio + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        System.out.println("\n" + response);
     }
 
 

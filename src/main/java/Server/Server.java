@@ -74,6 +74,27 @@ public class Server {
                     } else if (requestType.equals("LOGIN")) {
                         // Handle login
                         login(requestData, writer);
+                    } else if (requestType.equals("EDIT_IDOL_NAME")) {
+                        // Handle idol name edit
+                        editIdolFullName(requestData, writer);
+                    } else if (requestType.equals("EDIT_IDOL_ALIAS")) {
+                        // Handle idol alias edit
+                        editIdolAlias(requestData, writer);
+                    } else if (requestType.equals("EDIT_IDOL_EMAIL")) {
+                        // Handle idol email edit
+                        editIdolEmail(requestData,writer);
+                    } else if (requestType.equals("EDIT_IDOL_PASSWORD")) {
+                        // Handle idol password edit
+                        editIdolPassword(requestData,writer);
+                    } else if (requestType.equals("EDIT_IDOL_TYPE")) {
+                        // Handle idol type edit
+                        editIdolType(requestData, writer);
+                    } else if (requestType.equals("EDIT_IDOL_BIO")) {
+                        // Handle idol bio edit
+                        editIdolBio(requestData, writer);
+                    } else if (requestType.equals("EDIT_IDOL_QBIT_RATE")) {
+                        // Handle idol QBit Rate edit
+                        editIdolQBitRate(requestData, writer);
                     } else if (requestType.equals("SET_AVAILABILITY")) {
                         // Handle setting availability of idol
                         setAvailability(requestData, writer);
@@ -81,8 +102,29 @@ public class Server {
                         // Handle viewing schedules of idols
                         viewSchedules(requestData, writer);
                     } else if (requestType.equals("VIEW_FEEDBACKS")) {
-                        //Handle viewing feedbacks of idols
+                        // Handle viewing feedbacks of idols
                         viewFeedbacks(requestData, writer);
+                    } else if (requestType.equals("EDIT_FAN_FULLNAME")) {
+                        // Handle fan full name edit
+                        editFanFullName(requestData, writer);
+                    } else if (requestType.equals("EDIT_FAN_USERNAME")) {
+                        // Handle fan username edit
+                        editFanUsername(requestData, writer);
+                    } else if (requestType.equals("EDIT_FAN_EMAIL")) {
+                        // Handle fan email edit
+                        editFanEmail(requestData, writer);
+                    } else if (requestType.equals("EDIT_FAN_PASSWORD")) {
+                        // Handle fan password edit
+                        editFanPassword(requestData, writer);
+                    } else if (requestType.equals("EDIT_FAN_GENDER")) {
+                        // Handle fan gender edit
+                        editFanGender(requestData, writer);
+                    } else if (requestType.equals("EDIT_FAN_BIRTHDATE")) {
+                        // Handle fan birthdate edit
+                        editFanBirthdate(requestData, writer);
+                    } else if (requestType.equals("EDIT_FAN_BIO")) {
+                        // Handle fan bio edit
+                        editFanBio(requestData, writer);
                     } else {
                         writer.write("Invalid request\n");
                         writer.flush();
@@ -208,6 +250,153 @@ public class Server {
                 System.out.println("\nClient logged in: " + clientSocket.getInetAddress());
             } else {
                 writer.write("LOGIN_FAILED\n");
+            }
+            writer.flush();
+        }
+
+        private void editIdolFullName(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            // Extract idol ID and new name from data array
+            int idolID = Integer.parseInt(data[1]);
+            String newName = data[2];
+
+            // Update the idol's name in the database
+            String query = "UPDATE IDOL SET IdolFullName=? WHERE IdolID=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, newName);
+            preparedStatement.setInt(2, idolID);
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            // Send response to client
+            if (rowsAffected > 0) {
+                writer.write("Idol Name Updated Successfully\n");
+            } else {
+                writer.write("Idol Name Update Failed\n");
+            }
+            writer.flush();
+        }
+
+        private void editIdolAlias(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            // Extract idol ID and new alias from data array
+            int idolID = Integer.parseInt(data[1]);
+            String newAlias = data[2];
+
+            // Update the idol's alias in the database
+            String query = "UPDATE IDOL SET Alias=? WHERE IdolID=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, newAlias);
+            preparedStatement.setInt(2, idolID);
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            // Send response to client
+            if (rowsAffected > 0) {
+                writer.write("Idol Alias Updated Successfully\n");
+            } else {
+                writer.write("Idol Alias Update Failed\n");
+            }
+            writer.flush();
+        }
+
+        private void editIdolEmail(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            // Extract idol ID and new email from data array
+            int idolID = Integer.parseInt(data[1]);
+            String newEmail = data[2];
+
+            // Update the fan's email in the database
+            String query = "UPDATE IDOL SET IdolEmail=? WHERE IdolID=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, newEmail);
+            preparedStatement.setInt(2, idolID);
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            // Send response to client
+            if (rowsAffected > 0) {
+                writer.write("Idol Email Updated Successfully\n");
+            } else {
+                writer.write("Idol Email Update Failed\n");
+            }
+            writer.flush();
+        }
+
+        private void editIdolPassword(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            // Extract idol ID and new password from data array
+            int idolID = Integer.parseInt(data[1]);
+            String newPassword = data[2];
+
+            // Update the fan's password in the database
+            String query = "UPDATE IDOL SET IdolPassword=? WHERE IdolID=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, newPassword);
+            preparedStatement.setInt(2, idolID);
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            // Send response to client
+            if (rowsAffected > 0) {
+                writer.write("Idol Password Updated Successfully\n");
+            } else {
+                writer.write("Idol Password Update Failed\n");
+            }
+            writer.flush();
+        }
+
+        private void editIdolType(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            // Extract idol ID and new idol type from data array
+            int idolID = Integer.parseInt(data[1]);
+            String newIdolType = data[2];
+
+            // Update the idol's type in the database
+            String query = "UPDATE IDOL SET IdolType=? WHERE IdolID=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, newIdolType);
+            preparedStatement.setInt(2, idolID);
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            // Send response to client
+            if (rowsAffected > 0) {
+                writer.write("Idol Type Updated Successfully\n");
+            } else {
+                writer.write("Idol Type Update Failed\n");
+            }
+            writer.flush();
+        }
+
+        private void editIdolBio(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            // Extract idol ID and new bio from data array
+            int idolID = Integer.parseInt(data[1]);
+            String newBio = data[2];
+
+            // Update the idol's bio in the database
+            String query = "UPDATE IDOL SET IdolBio=? WHERE IdolID=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, newBio);
+            preparedStatement.setInt(2, idolID);
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            // Send response to client
+            if (rowsAffected > 0) {
+                writer.write("Idol Bio Updated Successfully\n");
+            } else {
+                writer.write("Idol Bio Update Failed\n");
+            }
+            writer.flush();
+        }
+
+        private void editIdolQBitRate(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            // Extract idol ID and new QBit Rate from data array
+            int idolID = Integer.parseInt(data[1]);
+            String newQBitRate = data[2];
+
+            // Update the idol's QBit Rate in the database
+            String query = "UPDATE IDOL SET QbitRatePer10Mins=? WHERE IdolID=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, newQBitRate);
+            preparedStatement.setInt(2, idolID);
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            // Send response to client
+            if (rowsAffected > 0) {
+                writer.write("Idol QBit Rate Updated Successfully\n");
+            } else {
+                writer.write("Idol QBit Rate Update Failed\n");
             }
             writer.flush();
         }
@@ -341,6 +530,153 @@ public class Server {
                 writer.write("NO_FEEDBACKS_FOUND\n");
             }
             writer.write(feedbacksString.toString() + "\n");
+            writer.flush();
+        }
+
+        private void editFanFullName(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            // Extract fan ID and new full name from data array
+            int fanID = Integer.parseInt(data[1]);
+            String newFullName = data[2];
+
+            // Update the fan's full name in the database
+            String query = "UPDATE FAN SET FanFullName=? WHERE FanID=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, newFullName);
+            preparedStatement.setInt(2, fanID);
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            // Send response to client
+            if (rowsAffected > 0) {
+                writer.write("Fan Full Name Updated Successfully\n");
+            } else {
+                writer.write("Fan Full Name Update Failed\n");
+            }
+            writer.flush();
+        }
+
+        private void editFanUsername(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            // Extract fan ID and new username from data array
+            int fanID = Integer.parseInt(data[1]);
+            String newUsername = data[2];
+
+            // Update the fan's username in the database
+            String query = "UPDATE FAN SET Username=? WHERE FanID=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, newUsername);
+            preparedStatement.setInt(2, fanID);
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            // Send response to client
+            if (rowsAffected > 0) {
+                writer.write("Fan Username Updated Successfully\n");
+            } else {
+                writer.write("Fan Username Update Failed\n");
+            }
+            writer.flush();
+        }
+
+        private void editFanEmail(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            // Extract fan ID and new email from data array
+            int fanID = Integer.parseInt(data[1]);
+            String newEmail = data[2];
+
+            // Update the fan's email in the database
+            String query = "UPDATE FAN SET FanEmail=? WHERE FanID=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, newEmail);
+            preparedStatement.setInt(2, fanID);
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            // Send response to client
+            if (rowsAffected > 0) {
+                writer.write("Fan Email Updated Successfully\n");
+            } else {
+                writer.write("Fan Email Update Failed\n");
+            }
+            writer.flush();
+        }
+
+        private void editFanPassword(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            // Extract fan ID and new password from data array
+            int fanID = Integer.parseInt(data[1]);
+            String newPassword = data[2];
+
+            // Update the fan's password in the database
+            String query = "UPDATE FAN SET FanPassword=? WHERE FanID=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, newPassword);
+            preparedStatement.setInt(2, fanID);
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            // Send response to client
+            if (rowsAffected > 0) {
+                writer.write("Fan Password Updated Successfully\n");
+            } else {
+                writer.write("Fan Password Update Failed\n");
+            }
+            writer.flush();
+        }
+
+        private void editFanGender(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            // Extract fan ID and new gender from data array
+            int fanID = Integer.parseInt(data[1]);
+            String newGender = data[2];
+
+            // Update the fan's gender in the database
+            String query = "UPDATE FAN SET Gender=? WHERE FanID=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, newGender);
+            preparedStatement.setInt(2, fanID);
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            // Send response to client
+            if (rowsAffected > 0) {
+                writer.write("Fan Gender Updated Successfully\n");
+            } else {
+                writer.write("Fan Gender Update Failed\n");
+            }
+            writer.flush();
+        }
+
+        private void editFanBirthdate(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            // Extract fan ID and new birthdate from data array
+            int fanID = Integer.parseInt(data[1]);
+            String newBirthdate = data[2];
+
+            // Update the fan's birthdate in the database
+            String query = "UPDATE FAN SET Birthdate=? WHERE FanID=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, newBirthdate);
+            preparedStatement.setInt(2, fanID);
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            // Send response to client
+            if (rowsAffected > 0) {
+                writer.write("Fan Birthdate Updated Successfully\n");
+            } else {
+                writer.write("Fan Birthdate Update Failed\n");
+            }
+            writer.flush();
+        }
+
+        private void editFanBio(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            // Extract fan ID and new bio from data array
+            int fanID = Integer.parseInt(data[1]);
+            String newBio = data[2];
+
+            // Update the fan's bio in the database
+            String query = "UPDATE FAN SET FanBio=? WHERE FanID=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, newBio);
+            preparedStatement.setInt(2, fanID);
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            // Send response to client
+            if (rowsAffected > 0) {
+                writer.write("Fan Bio Updated Successfully\n");
+            } else {
+                writer.write("Fan Bio Update Failed\n");
+            }
             writer.flush();
         }
     }
