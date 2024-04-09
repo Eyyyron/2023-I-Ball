@@ -201,8 +201,7 @@ public class Client {
                         break;
                     case 4:
                         System.out.println("\nViewing feedbacks...");
-                        requestViewFeedbacks(writer);
-                        receiveFeedbacks(reader);
+                        viewFeedbacks(writer, reader, scanner);
                         break;
                     case 5:
                         System.out.println("\nLogging out...");
@@ -452,18 +451,36 @@ public class Client {
         }
     }
 
-
-    private static void requestViewFeedbacks(BufferedWriter writer) throws IOException {
-        writer.write("VIEW_FEEDBACKS," + idolID + "\n"); // Send idolID along with the request
+    private static void viewFeedbacks(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        // Send feedback request to the server
+        writer.write("VIEW_FEEDBACKS," + idolID + "\n");
         writer.flush();
-    }
 
-    private static void receiveFeedbacks(BufferedReader reader) throws IOException {
-        // Receive and display feedbacks from the server
-        String line;
-        while ((line = reader.readLine()) != null && !line.isEmpty()) {
-            System.out.println(line);
+        // Receive feedbacks from the server
+        String response = reader.readLine();
+        if (response.equals("FEEDBACKS_FOUND")) {
+            System.out.println("\nFeedbacks:");
+            System.out.println("-------------------------------");
+            String feedbacksData = reader.readLine();
+            String[] feedbacks = feedbacksData.split(",");
+            for (String feedback : feedbacks) {
+                String[] fields = feedback.split("\\|");
+                String username = fields[0]; // Fan's Username
+                int rating = Integer.parseInt(fields[1]);
+                String comment = fields[2];
+
+                System.out.println("Fan's Username: " + username);
+                System.out.println("Rating: " + rating);
+                System.out.println("Comment: " + comment);
+                System.out.println("-------------------------------");
+                System.out.println("\nReturning to Idol Menu...");
+            }
+        } else if (response.equals("NO_FEEDBACKS_FOUND")) {
+            System.out.println("\nNo feedbacks found.");
+        } else {
+            System.out.println("\nUnexpected response from server.");
         }
     }
+
 
 }

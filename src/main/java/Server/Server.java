@@ -77,11 +77,12 @@ public class Server {
                     } else if (requestType.equals("SET_AVAILABILITY")) {
                         // Handle setting availability of idol
                         setAvailability(requestData, writer);
-                    } else if (requestType.equals("VIEW_SCHEDULES")){
+                    } else if (requestType.equals("VIEW_SCHEDULES")) {
                         // Handle viewing schedules of idols
                         viewSchedules(requestData, writer);
-                    } else if (requestType.equals("VIEW_FEEDBACKS")){
-                        handleViewFeedbacks(requestData[1], writer);
+                    } else if (requestType.equals("VIEW_FEEDBACKS")) {
+                        //Handle viewing feedbacks of idols
+                        viewFeedbacks(requestData, writer);
                     } else {
                         writer.write("Invalid request\n");
                         writer.flush();
@@ -303,39 +304,44 @@ public class Server {
             writer.flush();
         }
 
+        private void viewFeedbacks(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            int idolID = Integer.parseInt(data[1]);
 
-        public void viewFeedback(String idolID, BufferedWriter writer) throws SQLException, IOException {
-            // Get feedback for the specified idol
-            String query = "SELECT FanID, Rating, Comment FROM FEEDBACK WHERE MeetupID IN (SELECT MeetupID FROM MEETUP WHERE IdolID = ?)";
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, idolID);
-            ResultSet resultSet = preparedStatement.executeQuery();
+            // SQL query to retrieve feedbacks for the given IdolID
+            String query = "SELECT FAN.Username, FEEDBACK.Rating, FEEDBACK.Comment " +
+                    "FROM MEETUP " +
+                    "INNER JOIN FEEDBACK ON MEETUP.MeetupID = FEEDBACK.MeetupID " +
+                    "INNER JOIN FAN ON MEETUP.FanID = FAN.FanID " +
+                    "WHERE MEETUP.IdolID = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, idolID);
+            ResultSet resultSet = statement.executeQuery();
 
-            // Display feedback to the idol
+            // Prepare feedbacks string to send to the client
+            StringBuilder feedbacksString = new StringBuilder();
+            boolean hasFeedbacks = false;
             while (resultSet.next()) {
-                String fanID = resultSet.getString("FanID");
+                if (hasFeedbacks) {
+                    feedbacksString.append(",");
+                } else {
+                    hasFeedbacks = true;
+                }
+
+                String username = resultSet.getString("Username");
                 int rating = resultSet.getInt("Rating");
                 String comment = resultSet.getString("Comment");
 
-                // Write feedback to the client
-                writer.write("Fan ID: " + fanID + "\n");
-                writer.write("Rating: " + rating + "\n");
-                writer.write("Comment: " + comment + "\n");
-                writer.write("-------------------\n");
+                feedbacksString.append(username).append("|").append(rating).append("|").append(comment);
             }
-            if (!resultSet.first()) {
-                writer.write("No feedback found for Idol " + idolID + "\n");
+
+            // Send the response to the client
+            if (hasFeedbacks) {
+                writer.write("FEEDBACKS_FOUND\n");
+            } else {
+                writer.write("NO_FEEDBACKS_FOUND\n");
             }
+            writer.write(feedbacksString.toString() + "\n");
             writer.flush();
         }
-
-        private void handleViewFeedbacks(String request, BufferedWriter writer) throws SQLException, IOException {
-            String[] requestData = request.split(",");
-            String idolID = requestData[1];
-
-            viewFeedback(idolID, writer);
-        }
-
     }
-
 }
