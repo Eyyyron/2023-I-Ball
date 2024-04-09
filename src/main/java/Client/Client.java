@@ -383,52 +383,73 @@ public class Client {
     }
 
     private static void viewSchedules(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
-        System.out.println("\nChoose search option:");
-        System.out.println("1. Search by idol alias");
-        System.out.println("2. Search by available day");
-        System.out.print("Enter your choice: ");
-        int choice = scanner.nextInt();
+        boolean continueViewing = true;
 
-        String searchTerm = "";
-        if (choice == 1) {
-            System.out.print("\nEnter the idol alias to search: ");
-            scanner.nextLine(); // consume newline
-            searchTerm = scanner.nextLine();
-        } else if (choice == 2) {
-            System.out.print("\nEnter the available day to search (e.g. Monday): ");
-            scanner.nextLine(); // consume newline
-            searchTerm = scanner.nextLine();
-        } else {
-            System.out.println("\nInvalid choice.");
-            return;
-        }
+        while (continueViewing) {
+            System.out.println("\nChoose search option:");
+            System.out.println("1. Search by idol alias");
+            System.out.println("2. Search by available day");
+            System.out.print("Enter your choice: ");
+            int choice = scanner.nextInt();
 
-        // Send the request with the search term to the server
-        writer.write("VIEW_SCHEDULES," + choice + "," + searchTerm + "\n");
-        writer.flush();
-
-        // Display the schedule table after receiving the response from the server
-        String response = reader.readLine();
-        if (response.equals("SCHEDULES_FOUND")) {
-            System.out.println("\nAvailable schedules:");
-            System.out.println("--------------------------------------------------------------------");
-            System.out.println("| Idol                 |  Available Day  | Start Time | End Time   |");
-            System.out.println("--------------------------------------------------------------------");
-
-            // Get the schedules from the response and display them in a table
-            String[] schedules = reader.readLine().split(",");
-            for (String schedule : schedules) {
-                String[] fields = schedule.split("\\|");
-                System.out.printf("| %-20s | %-15s | %-10s | %-10s |%n", fields[0].trim(), fields[1].trim(), fields[2].trim(), fields[3].trim());
+            String searchTerm = "";
+            if (choice == 1) {
+                System.out.print("\nEnter the idol alias to search: ");
+                scanner.nextLine(); // consume newline
+                searchTerm = scanner.nextLine();
+            } else if (choice == 2) {
+                System.out.print("\nEnter the available day to search (e.g. Monday): ");
+                scanner.nextLine(); // consume newline
+                searchTerm = scanner.nextLine();
+            } else {
+                System.out.println("\nInvalid choice.");
+                return;
             }
 
-            System.out.println("--------------------------------------------------------------------");
-        } else if (response.equals("NO_SCHEDULES_FOUND")) {
-            System.out.println("\nNo schedules found.");
-        } else if (response.equals("INVALID_CHOICE")) {
-            System.out.println("\nInvalid choice.");
-        } else {
-            System.out.println("\nUnexpected response from server.");
+            // Send the request with the search term to the server
+            writer.write("VIEW_SCHEDULES," + choice + "," + searchTerm + "\n");
+            writer.flush();
+
+            // Display the schedule table after receiving the response from the server
+            String response = reader.readLine();
+            if (response.equals("SCHEDULES_FOUND")) {
+                System.out.println("\nAvailable schedules:");
+                System.out.println("--------------------------------------------------------------------");
+                System.out.println("| Idol                 |  Available Day  | Start Time | End Time   |");
+                System.out.println("--------------------------------------------------------------------");
+
+                // Get the schedules from the response and display them in a table
+                String[] schedules = reader.readLine().split(",");
+                for (String schedule : schedules) {
+                    String[] fields = schedule.split("\\|");
+                    System.out.printf("| %-20s | %-15s | %-10s | %-10s |%n", fields[0].trim(), fields[1].trim(), fields[2].trim(), fields[3].trim());
+                }
+
+                System.out.println("--------------------------------------------------------------------");
+
+                // Ask user if they want to view another schedule
+                System.out.print("\nDo you want to view another schedule? (yes/no): ");
+                String viewAnother = scanner.next();
+                if (viewAnother.equalsIgnoreCase("no")) {
+                    continueViewing = false;
+                }
+            } else if (response.equals("NO_SCHEDULES_FOUND")) {
+                System.out.println("\nNo schedules found.");
+                continueViewing = false;
+            } else if (response.equals("INVALID_CHOICE")) {
+                System.out.println("\nInvalid choice.");
+                continueViewing = false;
+            } else {
+                System.out.println("\nUnexpected response from server.");
+                continueViewing = false;
+            }
+        }
+
+        // If user chose to exit, go back to fan menu
+        if (!continueViewing) {
+            System.out.println("\nReturning to Fan Menu...");
+            fanMenu(writer, reader, scanner);
         }
     }
+
 }
