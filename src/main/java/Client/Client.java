@@ -2,7 +2,6 @@ package Client;
 
 import java.io.*;
 import java.net.Socket;
-import java.time.Duration;
 import java.util.Scanner;
 
 public class Client {
@@ -206,7 +205,7 @@ public class Client {
                         break;
                     case 5:
                         System.out.println("\nLogging Out...");
-                        System.out.println("\nThank you for using the program.");
+                        System.out.println("\nThank you for using Eyeball!");
                         writer.write("LOGOUT\n");
                         writer.flush();
                         logout = true;
@@ -768,9 +767,9 @@ public class Client {
     private static void browseIdols(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
         boolean backToMenu = false;
         while (!backToMenu) {
-            System.out.println("\nBrowse Idols:");
+            System.out.println("\nBrowse Idols Menu:");
             System.out.println("1. Search Idols by Alias");
-            System.out.println("2. Return");
+            System.out.println("2. Exit Browse Idols Menu");
             System.out.print("Enter your choice: ");
 
             if (scanner.hasNextInt()) {
@@ -795,11 +794,11 @@ public class Client {
                                 String idolBio = fields[2];
                                 double qbitRatePer10Mins = Double.parseDouble(fields[3]);
 
-                                System.out.println("\nSearch Result:");
+                                System.out.println("\nSearch Result/s:");
                                 System.out.println("-------------------------------");
                                 System.out.println("Alias: " + alias);
-                                System.out.println("Idol Type: " + idolType);
-                                System.out.println("Idol Bio: " + idolBio);
+                                System.out.println("Type: " + idolType);
+                                System.out.println("Bio: " + idolBio);
                                 System.out.println("Qbit Rate per 10 Mins: " + qbitRatePer10Mins);
                                 System.out.println("-------------------------------");
                             } else {
