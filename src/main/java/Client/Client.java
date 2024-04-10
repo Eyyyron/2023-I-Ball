@@ -138,7 +138,7 @@ public class Client {
                         break;
                     case 2:
                         System.out.println("\nBrowsing Idols...");
-                        // Placeholder for browsing idols
+                        browseIdols(writer, reader, scanner);
                         break;
                     case 3:
                         System.out.println("\nViewing Interaction History...");
@@ -147,6 +147,7 @@ public class Client {
                     case 4:
                         System.out.println("\nViewing Available Idol Schedules...");
                         viewSchedules(writer, reader, scanner);
+                        break;
                     case 5:
                         System.out.println("\nLogging Out...");
                         System.out.println("\nThank you for using the program.");
@@ -423,6 +424,7 @@ public class Client {
                             editFanBio(writer, reader, scanner);
                             break;
                         case 8:
+                            System.out.println("\nReturning to Fan Menu...");
                             exitMenu = true;
                             break;
                         default:
@@ -761,6 +763,64 @@ public class Client {
         // Receive and display server response
         String response = reader.readLine();
         System.out.println("\n" + response);
+    }
+
+    private static void browseIdols(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        boolean backToMenu = false;
+        while (!backToMenu) {
+            System.out.println("\nBrowse Idols:");
+            System.out.println("1. Search Idols by Alias");
+            System.out.println("2. Return");
+            System.out.print("Enter your choice: ");
+
+            if (scanner.hasNextInt()) {
+                int choice = scanner.nextInt();
+                switch (choice) {
+                    case 1:
+                        System.out.println("\nSearching Idols by Alias...");
+                        System.out.print("Enter the alias of the idol you want to search: ");
+                        scanner.nextLine(); // Consume newline character
+                        String searchAlias = scanner.nextLine().trim();
+                        if (!searchAlias.isEmpty()) {
+                            // Send search request to the server
+                            writer.write("BROWSE_IDOL," + searchAlias + "\n");
+                            writer.flush();
+                            // Handle the search response
+                            String searchResponse = reader.readLine();
+                            if (searchResponse.equals("IDOL_FOUND")) {
+                                String searchResult = reader.readLine();
+                                String[] fields = searchResult.split("\\|");
+                                String alias = fields[0];
+                                String idolType = fields[1];
+                                String idolBio = fields[2];
+                                double qbitRatePer10Mins = Double.parseDouble(fields[3]);
+
+                                System.out.println("\nSearch Result:");
+                                System.out.println("-------------------------------");
+                                System.out.println("Alias: " + alias);
+                                System.out.println("Idol Type: " + idolType);
+                                System.out.println("Idol Bio: " + idolBio);
+                                System.out.println("Qbit Rate per 10 Mins: " + qbitRatePer10Mins);
+                                System.out.println("-------------------------------");
+                            } else {
+                                System.out.println("\nIdol not found.");
+                            }
+                        }
+                        break;
+                    case 2:
+                        System.out.println("\nReturning to Fan Menu...");
+                        backToMenu = true;
+                        break;
+                    default:
+                        System.out.println("\nInvalid choice. Please enter a valid option.");
+                        break;
+                }
+            } else {
+                // Consume non-integer input
+                scanner.next();
+                System.out.println("\nInvalid choice. Please enter a valid integer option.");
+            }
+        }
     }
 
 

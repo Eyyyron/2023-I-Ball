@@ -125,7 +125,10 @@ public class Server {
                     } else if (requestType.equals("EDIT_FAN_BIO")) {
                         // Handle fan bio edit
                         editFanBio(requestData, writer);
-                    } else {
+                    } else if (requestType.equals("BROWSE_IDOL")) {
+                        String alias = requestData[1];
+                        browseIdols(alias, writer);
+                    }else {
                         writer.write("Invalid request\n");
                         writer.flush();
                     }
@@ -268,9 +271,9 @@ public class Server {
 
             // Send response to client
             if (rowsAffected > 0) {
-                writer.write("Idol Name Updated Successfully\n");
+                writer.write("Idol Name Updated Successfully...\n");
             } else {
-                writer.write("Idol Name Update Failed\n");
+                writer.write("Idol Name Update Failed...\n");
             }
             writer.flush();
         }
@@ -289,9 +292,9 @@ public class Server {
 
             // Send response to client
             if (rowsAffected > 0) {
-                writer.write("Idol Alias Updated Successfully\n");
+                writer.write("Idol Alias Updated Successfully...\n");
             } else {
-                writer.write("Idol Alias Update Failed\n");
+                writer.write("Idol Alias Update Failed...\n");
             }
             writer.flush();
         }
@@ -310,9 +313,9 @@ public class Server {
 
             // Send response to client
             if (rowsAffected > 0) {
-                writer.write("Idol Email Updated Successfully\n");
+                writer.write("Idol Email Updated Successfully...\n");
             } else {
-                writer.write("Idol Email Update Failed\n");
+                writer.write("Idol Email Update Failed...\n");
             }
             writer.flush();
         }
@@ -331,9 +334,9 @@ public class Server {
 
             // Send response to client
             if (rowsAffected > 0) {
-                writer.write("Idol Password Updated Successfully\n");
+                writer.write("Idol Password Updated Successfully...\n");
             } else {
-                writer.write("Idol Password Update Failed\n");
+                writer.write("Idol Password Update Failed...\n");
             }
             writer.flush();
         }
@@ -352,9 +355,9 @@ public class Server {
 
             // Send response to client
             if (rowsAffected > 0) {
-                writer.write("Idol Type Updated Successfully\n");
+                writer.write("Idol Type Updated Successfully...\n");
             } else {
-                writer.write("Idol Type Update Failed\n");
+                writer.write("Idol Type Update Failed...\n");
             }
             writer.flush();
         }
@@ -373,9 +376,9 @@ public class Server {
 
             // Send response to client
             if (rowsAffected > 0) {
-                writer.write("Idol Bio Updated Successfully\n");
+                writer.write("Idol Bio Updated Successfully...\n");
             } else {
-                writer.write("Idol Bio Update Failed\n");
+                writer.write("Idol Bio Update Failed...\n");
             }
             writer.flush();
         }
@@ -394,9 +397,9 @@ public class Server {
 
             // Send response to client
             if (rowsAffected > 0) {
-                writer.write("Idol QBit Rate Updated Successfully\n");
+                writer.write("Idol QBit Rate Updated Successfully...\n");
             } else {
-                writer.write("Idol QBit Rate Update Failed\n");
+                writer.write("Idol QBit Rate Update Failed...\n");
             }
             writer.flush();
         }
@@ -547,9 +550,9 @@ public class Server {
 
             // Send response to client
             if (rowsAffected > 0) {
-                writer.write("Fan Full Name Updated Successfully\n");
+                writer.write("Fan Full Name Updated Successfully...\n");
             } else {
-                writer.write("Fan Full Name Update Failed\n");
+                writer.write("Fan Full Name Update Failed...\n");
             }
             writer.flush();
         }
@@ -568,9 +571,9 @@ public class Server {
 
             // Send response to client
             if (rowsAffected > 0) {
-                writer.write("Fan Username Updated Successfully\n");
+                writer.write("Fan Username Updated Successfully...\n");
             } else {
-                writer.write("Fan Username Update Failed\n");
+                writer.write("Fan Username Update Failed...\n");
             }
             writer.flush();
         }
@@ -589,9 +592,9 @@ public class Server {
 
             // Send response to client
             if (rowsAffected > 0) {
-                writer.write("Fan Email Updated Successfully\n");
+                writer.write("Fan Email Updated Successfully...\n");
             } else {
-                writer.write("Fan Email Update Failed\n");
+                writer.write("Fan Email Update Failed...\n");
             }
             writer.flush();
         }
@@ -610,9 +613,9 @@ public class Server {
 
             // Send response to client
             if (rowsAffected > 0) {
-                writer.write("Fan Password Updated Successfully\n");
+                writer.write("Fan Password Updated Successfully...\n");
             } else {
-                writer.write("Fan Password Update Failed\n");
+                writer.write("Fan Password Update Failed...\n");
             }
             writer.flush();
         }
@@ -631,9 +634,9 @@ public class Server {
 
             // Send response to client
             if (rowsAffected > 0) {
-                writer.write("Fan Gender Updated Successfully\n");
+                writer.write("Fan Gender Updated Successfully...\n");
             } else {
-                writer.write("Fan Gender Update Failed\n");
+                writer.write("Fan Gender Update Failed...\n");
             }
             writer.flush();
         }
@@ -652,9 +655,9 @@ public class Server {
 
             // Send response to client
             if (rowsAffected > 0) {
-                writer.write("Fan Birthdate Updated Successfully\n");
+                writer.write("Fan Birthdate Updated Successfully...\n");
             } else {
-                writer.write("Fan Birthdate Update Failed\n");
+                writer.write("Fan Birthdate Update Failed...\n");
             }
             writer.flush();
         }
@@ -673,11 +676,38 @@ public class Server {
 
             // Send response to client
             if (rowsAffected > 0) {
-                writer.write("Fan Bio Updated Successfully\n");
+                writer.write("Fan Bio Updated Successfully...\n");
             } else {
-                writer.write("Fan Bio Update Failed\n");
+                writer.write("Fan Bio Update Failed...\n");
             }
             writer.flush();
         }
+
+        private void browseIdols(String alias, BufferedWriter writer) throws SQLException, IOException {
+            // SQL query to search for a specific idol by alias
+            String query = "SELECT Alias, IdolType, IdolBio, QbitRatePer10Mins FROM IDOL WHERE Alias = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, alias);
+            ResultSet resultSet = statement.executeQuery();
+
+            // Prepare the search result to send to the client
+            if (resultSet.next()) {
+                String idolAlias = resultSet.getString("Alias");
+                String idolType = resultSet.getString("IdolType");
+                String idolBio = resultSet.getString("IdolBio");
+                double qbitRatePer10Mins = resultSet.getDouble("QbitRatePer10Mins");
+
+                // Send the idol information to the client
+                writer.write("IDOL_FOUND\n");
+                writer.write(idolAlias + "|" + idolType + "|" + idolBio + "|" + qbitRatePer10Mins + "\n");
+            } else {
+                // Send a message indicating idol not found
+                writer.write("IDOL_NOT_FOUND\n");
+            }
+            writer.flush();
+        }
+
+
+
     }
 }
