@@ -2,7 +2,6 @@ package Client;
 
 import java.io.*;
 import java.net.Socket;
-import java.time.Duration;
 import java.util.Scanner;
 
 public class Client {
@@ -125,7 +124,8 @@ public class Client {
             System.out.println("2. Browse Idols");
             System.out.println("3. View Interaction History");
             System.out.println("4. View Available Idol Schedules");
-            System.out.println("5. Logout");
+            System.out.println("5. Write Feedback");
+            System.out.println("6. Logout");
             System.out.print("Enter your choice: ");
 
             // Check if the input is an integer
@@ -148,6 +148,10 @@ public class Client {
                         System.out.println("\nViewing Available Idol Schedules...");
                         viewSchedules(writer, reader, scanner);
                     case 5:
+                        System.out.println("\nWriting Feedback...");
+                        writeFeedback(writer, reader, scanner);
+                        break;
+                    case 6:
                         System.out.println("\nLogging Out...");
                         System.out.println("\nThank you for using the program.");
                         writer.write("LOGOUT\n");
@@ -763,5 +767,30 @@ public class Client {
         System.out.println("\n" + response);
     }
 
+    private static void writeFeedback(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        System.out.print("Enter MeetupID: ");
+        int meetupID = scanner.nextInt();
+        scanner.nextLine(); // Consume newline character
 
+        System.out.print("Enter rating (1-5): ");
+        int rating = scanner.nextInt();
+        scanner.nextLine(); // Consume newline character
+
+        System.out.print("Enter your feedback comment: ");
+        String comment = scanner.nextLine();
+
+        // Send feedback data to the server
+        writer.write("WRITE_FEEDBACK," + meetupID + "," + rating + "," + comment + "\n");
+        writer.flush();
+
+        // Receive response from the server
+        String response = reader.readLine();
+        if (response.equals("FEEDBACK_SAVED")) {
+            System.out.println("\nFeedback saved successfully.");
+        } else if (response.equals("FEEDBACK_NOT_SAVED")) {
+            System.out.println("\nFailed to save feedback. Please try again.");
+        } else {
+            System.out.println("\nUnexpected response from server.");
+        }
+    }
 }

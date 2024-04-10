@@ -6,7 +6,7 @@ import java.sql.*;
 
 public class Server {
     private static final int PORT = 12345;
-    private static final String URL = "jdbc:mysql://localhost:3306/eyeball";
+    private static final String URL = "jdbc:mysql://localhost/teamsea";
     private static final String USER = "root";
     private static final String PASSWORD = null;
 
@@ -82,10 +82,10 @@ public class Server {
                         editIdolAlias(requestData, writer);
                     } else if (requestType.equals("EDIT_IDOL_EMAIL")) {
                         // Handle idol email edit
-                        editIdolEmail(requestData,writer);
+                        editIdolEmail(requestData, writer);
                     } else if (requestType.equals("EDIT_IDOL_PASSWORD")) {
                         // Handle idol password edit
-                        editIdolPassword(requestData,writer);
+                        editIdolPassword(requestData, writer);
                     } else if (requestType.equals("EDIT_IDOL_TYPE")) {
                         // Handle idol type edit
                         editIdolType(requestData, writer);
@@ -125,6 +125,9 @@ public class Server {
                     } else if (requestType.equals("EDIT_FAN_BIO")) {
                         // Handle fan bio edit
                         editFanBio(requestData, writer);
+                    } else if (requestType.equals("WRITE_FEEDBACK")) {
+                        // Handle writing feedback
+                        writeFeedback(requestData, writer);
                     } else {
                         writer.write("Invalid request\n");
                         writer.flush();
@@ -676,6 +679,27 @@ public class Server {
                 writer.write("Fan Bio Updated Successfully\n");
             } else {
                 writer.write("Fan Bio Update Failed\n");
+            }
+            writer.flush();
+        }
+
+        private void writeFeedback(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            int meetupID = Integer.parseInt(data[1]);
+            int rating = Integer.parseInt(data[2]);
+            String comment = data[3];
+
+            // SQL query to insert feedback into the database
+            String query = "INSERT INTO FEEDBACK (MeetupID, Rating, Comment) VALUES (?,?,?)";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, meetupID);
+            statement.setInt(2, rating);
+            statement.setString(3, comment);
+            int rowsAffected = statement.executeUpdate();
+
+            if (rowsAffected > 0) {
+                writer.write("FEEDBACK_SAVED\n");
+            } else {
+                writer.write("FEEDBACK_NOT_SAVED\n");
             }
             writer.flush();
         }
