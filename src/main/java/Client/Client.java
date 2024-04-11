@@ -193,6 +193,7 @@ public class Client {
                          * PLACEHOLDER FOR (IDOL) VIEWING TOTAL EARNINGS
                          */
                         System.out.println("\nViewing Total Earnings...");
+                        viewTotalEarnings(writer, reader, scanner);
                         break;
                     case 3:
                         /**
@@ -637,6 +638,40 @@ public class Client {
         if (!continueViewing) {
             System.out.println("\nReturning to Fan Menu...");
             fanMenu(writer, reader, scanner);
+        }
+    }
+
+    private static void viewTotalEarnings(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        // Send request to the server to retrieve the earnings data
+        writer.write("VIEW_TOTAL_EARNINGS," + idolID + "\n");
+        writer.flush();
+
+        // Receive earnings data from the server
+        String response = reader.readLine();
+        if (response.equals("EARNINGS_FOUND")) {
+            System.out.println("\nEarnings:");
+            System.out.println("--------------------------------------------------------------------");
+            System.out.println("| Year | Total in Dollars | Total in Qbits |");
+            System.out.println("--------------------------------------------------------------------");
+
+            // Get the earnings data from the response and display them in a table
+            String earningsData = reader.readLine();
+            String[] earnings = earningsData.split(",");
+            for (String earning : earnings) {
+                String[] fields = earning.split("\\|");
+                String year = fields[0];
+                String[] yearField = year.split("-");
+                String totalInDollars = fields[1];
+                String totalInQbits = fields[2];
+
+                System.out.printf("| %-5s | %-15s | %-15s |%n", yearField[0].trim(), totalInDollars, totalInQbits);
+            }
+
+            System.out.println("--------------------------------------------------------------------");
+        } else if (response.equals("NO_EARNINGS_FOUND")) {
+            System.out.println("\nNo earnings found.");
+        } else {
+            System.out.println("\nUnexpected response from server.");
         }
     }
 
