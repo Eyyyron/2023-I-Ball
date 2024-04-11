@@ -145,9 +145,12 @@ public class Server {
                     } else if (requestType.equals("REPORT_IDOL")) {
                         int meetupID = Integer.parseInt(requestData[1]);
                         int fanID = Integer.parseInt(requestData[2]);
+                        String reportType = requestData[3]; // Extract report type
+                        String reportDescription = requestData[4]; // Extract report description
                         // Handle reporting the idol
-                        reportIdol(meetupID, fanID, writer);
+                        reportIdol(meetupID, fanID, reportType, reportDescription, writer);
                     }
+
                     else {
                         writer.write("Invalid request\n");
                         writer.flush();
@@ -818,16 +821,17 @@ public class Server {
             writer.flush();
         }
 
-        private void reportIdol(int meetupID, int fanID, BufferedWriter writer) throws SQLException, IOException {
+        private void reportIdol(int meetupID, int fanID, String reportType, String reportDescription, BufferedWriter writer) throws SQLException, IOException {
             // Implement the logic to report the idol
-            // This could involve inserting a record into the FANREPORT table
-            // For simplicity, let's assume it's handled by inserting a record into the database
-            String insertQuery = "INSERT INTO FANREPORT (FanID, MeetupID, FanReportType, FanReportDescription) VALUES (?, ?, ?, ?)";
+            // Retrieve the MeetupID from the database using a join
+            String insertQuery = "INSERT INTO FANREPORT (FanID, IdolID, FanReportType, FanReportDescription) " +
+                    "SELECT M.FanID, M.IdolID, ?, ? " +
+                    "FROM MEETUP M " +
+                    "WHERE M.MeetupID = ?";
             PreparedStatement insertStatement = connection.prepareStatement(insertQuery);
-            insertStatement.setInt(1, fanID);
-            insertStatement.setInt(2, meetupID);
-            insertStatement.setString(3, "Idol Report");
-            insertStatement.setString(4, "Reported the idol after the meetup");
+            insertStatement.setString(1, reportType);
+            insertStatement.setString(2, reportDescription);
+            insertStatement.setInt(3, meetupID);
             int rowsAffected = insertStatement.executeUpdate();
 
             // Send the response to the client

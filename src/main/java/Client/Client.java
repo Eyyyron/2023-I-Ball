@@ -2,6 +2,7 @@ package Client;
 
 import java.io.*;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.Scanner;
 
 public class Client {
@@ -31,14 +32,14 @@ public class Client {
             // Call the method for register/login prompt
             registerOrLoginPrompt(writer, reader, scanner);
 
-        } catch (IOException e) {
+        } catch (IOException | SQLException e) {
             e.printStackTrace();
         } finally {
             scanner.close();
         }
     }
 
-    private static void registerOrLoginPrompt(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+    private static void registerOrLoginPrompt(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException, SQLException {
         boolean continuePrompt = true;
 
         while (continuePrompt) {
@@ -88,7 +89,7 @@ public class Client {
         }
     }
 
-    private static void loginUser(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+    private static void loginUser(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException, SQLException {
         // Get user login details
         System.out.print("\nEnter your email: ");
         String email = scanner.next();
@@ -115,7 +116,7 @@ public class Client {
         }
     }
 
-    private static void fanMenu(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+    private static void fanMenu(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException, SQLException {
         boolean logout = false;
 
         while (!logout) {
@@ -569,7 +570,7 @@ public class Client {
         System.out.println("\n" + response);
     }
 
-    private static void viewSchedules(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+    private static void viewSchedules(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException, SQLException {
         boolean continueViewing = true;
 
         while (continueViewing) {
@@ -822,7 +823,7 @@ public class Client {
         }
     }
 
-    private static void viewInteractionHistory(BufferedWriter writer, BufferedReader reader, Scanner scanner, int fanID) throws IOException {
+    private static void viewInteractionHistory(BufferedWriter writer, BufferedReader reader, Scanner scanner, int fanID) throws IOException, SQLException {
         // Send interaction history request to the server for the logged-in user
         writer.write("VIEW_INTERACTION_HISTORY," + fanID + "\n");
         writer.flush();
@@ -859,7 +860,7 @@ public class Client {
                     handleMeetupActions(writer, reader, scanner, meetupID, fanID);
                     break;
                 case 2:
-                    System.out.println("Returning to Fan Menu...");
+                    System.out.println("\nReturning to Fan Menu...");
                     break;
                 default:
                     System.out.println("\nInvalid choice. Returning to Fan Menu...");
@@ -872,7 +873,7 @@ public class Client {
         }
     }
 
-    private static void handleMeetupActions(BufferedWriter writer, BufferedReader reader, Scanner scanner, int meetupID, int fanID) throws IOException {
+    private static void handleMeetupActions(BufferedWriter writer, BufferedReader reader, Scanner scanner, int meetupID, int fanID) throws IOException, SQLException {
         // Send request to the server to retrieve details of the specified meetup
         writer.write("GET_MEETUP_DETAILS," + meetupID + "," + fanID + "\n");
         writer.flush();
@@ -955,11 +956,40 @@ public class Client {
         }
     }
 
-    private static void reportIdol(BufferedWriter writer, BufferedReader reader, Scanner scanner, int meetupID, int fanID) throws IOException {
+    private static void reportIdol(BufferedWriter writer, BufferedReader reader, Scanner scanner, int meetupID, int fanID) throws SQLException, IOException {
+        // Prompt the fan for report type and description
+        System.out.println("\nReport Type:");
+        System.out.println("1. Inappropriate Behavior");
+        System.out.println("2. Harassment");
+        System.out.println("3. Verbal Abuse");
+        System.out.print("Enter report type: ");
+        int reportTypeChoice = scanner.nextInt();
+        String reportType;
+        switch (reportTypeChoice) {
+            case 1:
+                reportType = "Inappropriate Behavior";
+                break;
+            case 2:
+                reportType = "Harassment";
+                break;
+            case 3:
+                reportType = "Verbal Abuse";
+                break;
+            default:
+                System.out.println("Invalid report type choice. Defaulting to 'Inappropriate Behavior'.");
+                reportType = "Inappropriate Behavior";
+                break;
+        }
+
+        scanner.nextLine(); // Consume newline character
+
+        System.out.print("Enter report description: ");
+        String reportDescription = scanner.nextLine();
+
         // Implement the logic to report the idol
         // This could involve sending a report request to the server
         // Send a request to the server to report the idol
-        writer.write("REPORT_IDOL," + meetupID + "," + fanID + "\n");
+        writer.write("REPORT_IDOL," + meetupID + "," + fanID + "," + reportType + "," + reportDescription + "\n");
         writer.flush();
 
         // Receive response from the server
