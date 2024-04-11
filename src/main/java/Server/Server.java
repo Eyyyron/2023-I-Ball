@@ -904,17 +904,19 @@ public class Server {
             int rowsAffected = statement.executeUpdate(query);
 
             if (rowsAffected > 0) {
-                // Get the meetup ID of the meetup that was just updated to "Pending"
-                query = "SELECT MeetupID FROM MEETUP WHERE Status = 'Pending' ORDER BY MeetupID DESC LIMIT 1";
+                // Get the meetup ID and IdolID of the meetup that was just updated to "Pending"
+                query = "SELECT MeetupID, IdolID FROM MEETUP WHERE Status = 'Pending' ORDER BY MeetupID DESC LIMIT 1";
                 PreparedStatement preparedStatement = connection.prepareStatement(query);
                 ResultSet resultSet = preparedStatement.executeQuery();
                 int meetupID = 0;
+                int idolID = 0;
                 if (resultSet.next()) {
                     meetupID = resultSet.getInt("MeetupID");
+                    idolID = resultSet.getInt("IdolID");
                 }
 
                 // Get the duration of the meetup
-                query = "SELECT DurationInMinutes FROM MEETUP WHERE MeetupID =?";
+                query = "SELECT DurationInMinutes FROM MEETUP WHERE MeetupID = ?";
                 preparedStatement = connection.prepareStatement(query);
                 preparedStatement.setInt(1, meetupID);
                 resultSet = preparedStatement.executeQuery();
@@ -924,23 +926,21 @@ public class Server {
                 }
 
                 // Get the Qbit rate per 10 minutes of the idol in the meetup
-                query = "SELECT QbitRatePer10Mins FROM IDOL WHERE IdolID = (SELECT IdolID FROM MEETUP WHERE MeetupID =?)";
+                query = "SELECT QbitRatePer10Mins FROM IDOL WHERE IdolID = ?";
                 preparedStatement = connection.prepareStatement(query);
-                preparedStatement.setInt(1, meetupID);
+                preparedStatement.setInt(1, idolID);
                 resultSet = preparedStatement.executeQuery();
                 double qbitRatePer10Mins = 0;
                 if (resultSet.next()) {
                     qbitRatePer10Mins = resultSet.getDouble("QbitRatePer10Mins");
                 }
 
-                // Calculate the amount in Qbits
-                double amountInQbits = (durationInMinutes / 10) * qbitRatePer10Mins;
-
-                // Calculate the amount in dollars
-                double amountInDollars = amountInQbits / 80;
+                // Calculate the amount in Qbits and dollars
+                double amountInQbits = (durationInMinutes / 10.0) * qbitRatePer10Mins;
+                double amountInDollars = amountInQbits / 80.0;
 
                 // Insert a new row into the PAYMENT table
-                query = "INSERT INTO PAYMENT (MeetupID, AmountInDollars, AmountInQbits, PaymentDate, PaymentTime, PaymentMode) VALUES (?,?,?, CURDATE(), CURTIME(),?)";
+                query = "INSERT INTO PAYMENT (MeetupID, AmountInDollars, AmountInQbits, PaymentDate, PaymentTime, PaymentMode) VALUES (?, ?, ?, CURDATE(), CURTIME(), ?)";
                 preparedStatement = connection.prepareStatement(query);
                 preparedStatement.setInt(1, meetupID);
                 preparedStatement.setDouble(2, amountInDollars);
@@ -949,10 +949,17 @@ public class Server {
                 rowsAffected = preparedStatement.executeUpdate();
 
                 if (rowsAffected > 0) {
+                    // Update TotalInQbits and TotalInDollars in IDOLEARNINGS table
+                    query = "UPDATE IDOLEARNINGS SET TotalInQbits = TotalInQbits + ?, TotalInDollars = TotalInDollars + ? WHERE IdolID = ? AND Year = YEAR(CURDATE())";
+                    preparedStatement = connection.prepareStatement(query);
+                    preparedStatement.setDouble(1, amountInQbits);
+                    preparedStatement.setDouble(2, amountInDollars);
+                    preparedStatement.setInt(3, idolID);
+                    preparedStatement.executeUpdate();
+
                     // Send a response to the client indicating that the payment was successful
                     writer.write("PAYMENT_SUCCESS\n");
                     writer.flush();
-
                 } else {
                     // Send a response to the client indicating that the payment failed
                     writer.write("PAYMENT_FAILED\n");
