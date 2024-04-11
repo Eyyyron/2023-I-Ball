@@ -6,9 +6,9 @@ import java.sql.*;
 
 public class Server {
     private static final int PORT = 12345;
-    private static final String URL = "jdbc:mysql://localhost:3306/eyeball";
+    private static final String URL = "jdbc:mysql://localhost:3306/teamsea";
     private static final String USER = "root";
-    private static final String PASSWORD = null;
+    private static final String PASSWORD = "ComSci_CS221";
 
     public static void main(String[] args) {
         try {
@@ -101,6 +101,9 @@ public class Server {
                     } else if (requestType.equals("VIEW_SCHEDULES")) {
                         // Handle viewing schedules of idols
                         viewSchedules(requestData, writer);
+                    } else if (requestType.equals("VIEW_TOTAL_EARNINGS")) {
+                        // Handle viewing total earnings of idol
+                        viewTotalEarnings(requestData, writer);
                     } else if (requestType.equals("VIEW_FEEDBACKS")) {
                         // Handle viewing feedbacks of idols
                         viewFeedbacks(requestData, writer);
@@ -516,6 +519,43 @@ public class Server {
                 writer.write("NO_SCHEDULES_FOUND\n");
             }
             writer.write(scheduleString.toString() + "\n");
+            writer.flush();
+        }
+
+        private void viewTotalEarnings(String[] data, BufferedWriter writer) throws IOException, SQLException {
+            // Get the idolID from the request
+            String idolID = data[1];
+
+            // Retrieve the earnings data from the database
+            String query = "SELECT Year, TotalInDollars, TotalInQbits FROM IDOLEARNINGS WHERE IdolID =?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, idolID);
+            ResultSet resultSet = statement.executeQuery();
+
+            // Prepare the earnings string to send to the client
+            StringBuilder earningsString = new StringBuilder();
+            boolean hasEarnings = false;
+            while (resultSet.next()) {
+                if (hasEarnings) {
+                    earningsString.append(",");
+                } else {
+                    hasEarnings = true;
+                }
+
+                String year = resultSet.getString("Year");
+                String totalInDollars = resultSet.getString("TotalInDollars");
+                String totalInQbits = resultSet.getString("TotalInQbits");
+
+                earningsString.append(year).append("|").append(totalInDollars).append("|").append(totalInQbits);
+            }
+
+            // Send the earnings data to the client
+            if (hasEarnings) {
+                writer.write("EARNINGS_FOUND\n");
+            } else {
+                writer.write("NO_EARNINGS_FOUND\n");
+            }
+            writer.write(earningsString.toString() + "\n");
             writer.flush();
         }
 
