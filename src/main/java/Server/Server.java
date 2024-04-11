@@ -133,7 +133,8 @@ public class Server {
                         browseIdols(alias, writer);
                     } else if (requestType.equals("VIEW_INTERACTION_HISTORY")) {
                         viewInteractionHistory(requestData, writer);
-
+                    } else if (requestType.equals("RESERVE_MEETUP")){
+                        reserveMeetup(requestData, writer);
                     } else {
                         writer.write("Invalid request\n");
                         writer.flush();
@@ -790,6 +791,56 @@ public class Server {
                 writer.write("NO_INTERACTION_HISTORY_FOUND\n");
             }
             writer.write(interactionHistoryString.toString() + "\n");
+            writer.flush();
+        }
+
+        private void reserveMeetup(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            String fanID = data[1];
+            String idolAlias = data[2];
+            int durationInMinutes = Integer.parseInt(data[3]);
+            String scheduledDate = data[4];
+            String scheduledTime = data[5];
+
+            // Check if the idol exists
+            String checkIdolQuery = "SELECT IdolID FROM IDOL WHERE Alias = ?";
+            PreparedStatement checkIdolStatement = connection.prepareStatement(checkIdolQuery);
+            checkIdolStatement.setString(1, idolAlias);
+            ResultSet checkIdolResult = checkIdolStatement.executeQuery();
+
+            if (checkIdolResult.next()) {
+                int idolID = checkIdolResult.getInt("IdolID");
+
+                // Check if the fan and idol have a meetup scheduled on the same date and time
+                String checkMeetupQuery = "SELECT * FROM MEETUP WHERE FanID = ? AND IdolID = ? AND ScheduledDate = ? AND ScheduledTime = ?";
+                PreparedStatement checkMeetupStatement = connection.prepareStatement(checkMeetupQuery);
+                checkMeetupStatement.setInt(1, Integer.parseInt(fanID));
+                checkMeetupStatement.setInt(2, idolID);
+                checkMeetupStatement.setString(3, scheduledDate);
+                checkMeetupStatement.setString(4, scheduledTime);
+                ResultSet checkMeetupResult = checkMeetupStatement.executeQuery();
+
+                if (!checkMeetupResult.next()) {
+                    // Insert the new meetup into the MEETUP table
+                    String insertMeetupQuery = "INSERT INTO MEETUP (FanID, IdolID, DurationInMinutes, ScheduledDate, ScheduledTime, Status) VALUES (?, ?, ?, ?, ?, 'To Pay')";
+                    PreparedStatement insertMeetupStatement = connection.prepareStatement(insertMeetupQuery);
+                    insertMeetupStatement.setInt(1, Integer.parseInt(fanID));
+                    insertMeetupStatement.setInt(2, idolID);
+                    insertMeetupStatement.setInt(3, durationInMinutes);
+                    insertMeetupStatement.setString(4, scheduledDate);
+                    insertMeetupStatement.setString(5, scheduledTime);
+                    int rowsAffected = insertMeetupStatement.executeUpdate();
+
+                    if (rowsAffected > 0) {
+                        writer.write("MEETUP_RESERVED\n");
+                    } else {
+                        writer.write("ERROR_RESERVING_MEETUP\n");
+                    }
+                } else {
+                    writer.write("MEETUP_ALREADY_SCHEDULED\n");
+                }
+            } else {
+                writer.write("IDOL_NOT_FOUND\n");
+            }
             writer.flush();
         }
     }

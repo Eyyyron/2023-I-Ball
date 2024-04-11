@@ -153,7 +153,7 @@ public class Client {
                         break;
                     case 5:
                         System.out.println("\nReserving Meetups...");
-                        System.out.println("hahah");
+                        reserveMeetup(writer, reader, scanner);
                         break;
                     case 6:
                         System.out.println("\nOpening Payments...");
@@ -882,9 +882,9 @@ public class Client {
         String response = reader.readLine();
         if (response.equals("INTERACTION_HISTORY_FOUND")) {
             System.out.println("\nInteraction History:");
-            System.out.println("------------------------------------------------------------------------------------------------------");
-            System.out.println("| Meetup ID  | Duration (mins) | Scheduled Date  | Scheduled Time  | Idol Alias |   Fan Full Name    |");
-            System.out.println("------------------------------------------------------------------------------------------------------");
+            System.out.println("----------------------------------------------------------------------------------------------------------------");
+            System.out.println("| Meetup ID  | Duration (mins) | Scheduled Date  | Scheduled Time  |      Idol Alias      |   Fan Full Name    |");
+            System.out.println("----------------------------------------------------------------------------------------------------------------");
 
             String interactionHistoryData = reader.readLine();
             String[] interactions = interactionHistoryData.split(",");
@@ -897,12 +897,37 @@ public class Client {
                 String idolAlias = fields[4];
                 String fanFullName = fields[5];
 
-                System.out.printf("| %-10s | %-15d | %-15s | %-15s | %-10s | %-15s |%n", meetupID, durationInMinutes, scheduledDate, scheduledTime, idolAlias, fanFullName);
+                System.out.printf("| %-10s | %-15d | %-15s | %-15s | %-20s | %-15s |%n", meetupID, durationInMinutes, scheduledDate, scheduledTime, idolAlias, fanFullName);
             }
-            System.out.println("------------------------------------------------------------------------------------------------------");
+            System.out.println("----------------------------------------------------------------------------------------------------------------");
             System.out.println("\nReturning to Fan Menu...");
         } else if (response.equals("NO_INTERACTION_HISTORY_FOUND")) {
             System.out.println("\nNo interaction history found.");
+        }
+    }
+
+    private static void reserveMeetup(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        System.out.print("\nEnter the alias of the idol you want to reserve a meeting with: ");
+        String idolAlias = scanner.nextLine();
+        idolAlias = scanner.nextLine();
+
+        System.out.print("Enter the duration of the meeting in minutes: ");
+        int durationInMinutes = Integer.parseInt(scanner.nextLine());
+
+        System.out.print("Enter the scheduled date (YYYY-MM-DD): ");
+        String scheduledDate = scanner.nextLine();
+
+        System.out.print("Enter the scheduled time (HH:MM:SS): ");
+        String scheduledTime = scanner.nextLine();
+
+        // Send the meetup reservation request to the server
+        writer.write("RESERVE_MEETUP," + fanID + "," + idolAlias + "," + durationInMinutes + "," + scheduledDate + "," + scheduledTime + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        if(response.equals("MEETUP_RESERVED")){
+            System.out.println("\nMeetup Reserved Successfully...");
         }
     }
 }
