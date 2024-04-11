@@ -139,8 +139,8 @@ public class Server {
                         reserveMeetup(requestData, writer);
                     } else if (requestType.equals("MAKE_PAYMENT")) {
                         String paymentMethod = requestData[1];
-                        makePayment(paymentMethod, writer);
-                        reserveMeetup(requestData, writer);
+                        makePayment(paymentMethod, writer, reader);
+                        //reserveMeetup(requestData, writer);
                     } else if (requestType.equals("REPORT_IDOL")) {
                         reportIdol(requestData, writer);
                     } else if (requestType.equals("REPORT_FAN")) {
@@ -897,17 +897,67 @@ public class Server {
             writer.flush();
         }
 
-        private void makePayment(String paymentMethod, BufferedWriter writer) throws SQLException, IOException {
+        private void makePayment(String paymentMethod, BufferedWriter writer, BufferedReader reader) throws IOException, SQLException {
             // Update the status of the meetup to "Pending" in the database
             String query = "UPDATE MEETUP SET Status = 'Pending' WHERE Status = 'To Pay'";
             Statement statement = connection.createStatement();
             int rowsAffected = statement.executeUpdate(query);
 
             if (rowsAffected > 0) {
-                // Send a response to the client indicating that the payment was successful
-                writer.write("PAYMENT_SUCCESS\n");
-                writer.flush();
+                // Get the meetup ID of the meetup that was just updated to "Pending"
+                query = "SELECT MeetupID FROM MEETUP WHERE Status = 'Pending' ORDER BY MeetupID DESC LIMIT 1";
+                PreparedStatement preparedStatement = connection.prepareStatement(query);
+                ResultSet resultSet = preparedStatement.executeQuery();
+                int meetupID = 0;
+                if (resultSet.next()) {
+                    meetupID = resultSet.getInt("MeetupID");
+                }
 
+                // Get the duration of the meetup
+                query = "SELECT DurationInMinutes FROM MEETUP WHERE MeetupID =?";
+                preparedStatement = connection.prepareStatement(query);
+                preparedStatement.setInt(1, meetupID);
+                resultSet = preparedStatement.executeQuery();
+                int durationInMinutes = 0;
+                if (resultSet.next()) {
+                    durationInMinutes = resultSet.getInt("DurationInMinutes");
+                }
+
+                // Get the Qbit rate per 10 minutes of the idol in the meetup
+                query = "SELECT QbitRatePer10Mins FROM IDOL WHERE IdolID = (SELECT IdolID FROM MEETUP WHERE MeetupID =?)";
+                preparedStatement = connection.prepareStatement(query);
+                preparedStatement.setInt(1, meetupID);
+                resultSet = preparedStatement.executeQuery();
+                double qbitRatePer10Mins = 0;
+                if (resultSet.next()) {
+                    qbitRatePer10Mins = resultSet.getDouble("QbitRatePer10Mins");
+                }
+
+                // Calculate the amount in Qbits
+                double amountInQbits = (durationInMinutes / 10) * qbitRatePer10Mins;
+
+                // Calculate the amount in dollars
+                double amountInDollars = amountInQbits / 80;
+
+                // Insert a new row into the PAYMENT table
+                query = "INSERT INTO PAYMENT (MeetupID, AmountInDollars, AmountInQbits, PaymentDate, PaymentTime, PaymentMode) VALUES (?,?,?, CURDATE(), CURTIME(),?)";
+                preparedStatement = connection.prepareStatement(query);
+                preparedStatement.setInt(1, meetupID);
+                preparedStatement.setDouble(2, amountInDollars);
+                preparedStatement.setDouble(3, amountInQbits);
+                preparedStatement.setString(4, paymentMethod);
+                rowsAffected = preparedStatement.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    // Send a response to the client indicating that the payment was successful
+                    writer.write("PAYMENT_SUCCESS\n");
+                    writer.flush();
+
+                } else {
+                    // Send a response to the client indicating that the payment failed
+                    writer.write("PAYMENT_FAILED\n");
+                    writer.flush();
+                }
             } else {
                 // Send a response to the client indicating that the payment failed
                 writer.write("PAYMENT_FAILED\n");

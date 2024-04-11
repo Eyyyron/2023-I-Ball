@@ -171,24 +171,28 @@ public class Client {
                                     // Send a request to the server to make a payment using a credit card
                                     writer.write("MAKE_PAYMENT,Credit Card\n");
                                     writer.flush();
+                                    System.out.println("\nPayment Successful...");
                                     System.out.println("\nReturning to Fan Menu...");
                                     break;
                                 case 2:
                                     // Send a request to the server to make a payment using a debit card
                                     writer.write("MAKE_PAYMENT,Debit Card\n");
                                     writer.flush();
+                                    System.out.println("\nPayment Successful...");
                                     System.out.println("\nReturning to Fan Menu...");
                                     break;
                                 case 3:
                                     // Send a request to the server to make a payment using PayPal
                                     writer.write("MAKE_PAYMENT,PayPal\n");
                                     writer.flush();
+                                    System.out.println("\nPayment Successful...");
                                     System.out.println("\nReturning to Fan Menu...");
                                     break;
                                 case 4:
                                     // Send a request to the server to make a payment using GCash
                                     writer.write("MAKE_PAYMENT,GCash\n");
                                     writer.flush();
+                                    System.out.println("\nPayment Successful...");
                                     System.out.println("\nReturning to Fan Menu...");
                                     break;
                                 default:
