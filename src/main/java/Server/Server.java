@@ -24,7 +24,6 @@ public class Server {
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                //System.out.println("\nClient connected: " + clientSocket.getInetAddress());
 
                 // Handle client requests in a separate thread
                 Thread clientThread = new Thread(new ClientHandler(clientSocket));
@@ -66,67 +65,46 @@ public class Server {
                     }
 
                     if (requestType.equals("REGISTER_FAN")) {
-                        // Handle fan registration
                         registerFan(requestData, writer);
                     } else if (requestType.equals("REGISTER_IDOL")) {
-                        // Handle idol registration
                         registerIdol(requestData, writer);
                     } else if (requestType.equals("LOGIN")) {
-                        // Handle login
                         login(requestData, writer);
                     } else if (requestType.equals("EDIT_IDOL_NAME")) {
-                        // Handle idol name edit
                         editIdolFullName(requestData, writer);
                     } else if (requestType.equals("EDIT_IDOL_ALIAS")) {
-                        // Handle idol alias edit
                         editIdolAlias(requestData, writer);
                     } else if (requestType.equals("EDIT_IDOL_EMAIL")) {
-                        // Handle idol email edit
                         editIdolEmail(requestData, writer);
                     } else if (requestType.equals("EDIT_IDOL_PASSWORD")) {
-                        // Handle idol password edit
                         editIdolPassword(requestData, writer);
                     } else if (requestType.equals("EDIT_IDOL_TYPE")) {
-                        // Handle idol type edit
                         editIdolType(requestData, writer);
                     } else if (requestType.equals("EDIT_IDOL_BIO")) {
-                        // Handle idol bio edit
                         editIdolBio(requestData, writer);
                     } else if (requestType.equals("EDIT_IDOL_QBIT_RATE")) {
-                        // Handle idol QBit Rate edit
                         editIdolQBitRate(requestData, writer);
                     } else if (requestType.equals("SET_AVAILABILITY")) {
-                        // Handle setting availability of idol
                         setAvailability(requestData, writer);
                     } else if (requestType.equals("VIEW_SCHEDULES")) {
-                        // Handle viewing schedules of idols
                         viewSchedules(requestData, writer);
                     } else if (requestType.equals("VIEW_TOTAL_EARNINGS")) {
-                        // Handle viewing total earnings of idol
                         viewTotalEarnings(requestData, writer);
                     } else if (requestType.equals("VIEW_FEEDBACKS")) {
-                        // Handle viewing feedbacks of idols
                         viewFeedbacks(requestData, writer);
                     } else if (requestType.equals("EDIT_FAN_FULLNAME")) {
-                        // Handle fan full name edit
                         editFanFullName(requestData, writer);
                     } else if (requestType.equals("EDIT_FAN_USERNAME")) {
-                        // Handle fan username edit
                         editFanUsername(requestData, writer);
                     } else if (requestType.equals("EDIT_FAN_EMAIL")) {
-                        // Handle fan email edit
                         editFanEmail(requestData, writer);
                     } else if (requestType.equals("EDIT_FAN_PASSWORD")) {
-                        // Handle fan password edit
                         editFanPassword(requestData, writer);
                     } else if (requestType.equals("EDIT_FAN_GENDER")) {
-                        // Handle fan gender edit
                         editFanGender(requestData, writer);
                     } else if (requestType.equals("EDIT_FAN_BIRTHDATE")) {
-                        // Handle fan birthdate edit
                         editFanBirthdate(requestData, writer);
                     } else if (requestType.equals("EDIT_FAN_BIO")) {
-                        // Handle fan bio edit
                         editFanBio(requestData, writer);
                     } else if (requestType.equals("BROWSE_IDOL")) {
                         String alias = requestData[1];
@@ -1039,11 +1017,9 @@ public class Server {
             int rowsAffected = insertFeedbackStatement.executeUpdate();
 
             if (rowsAffected > 0) {
-                System.out.println();
-                writer.write("FEEDBACK_SUBMITTED\n");
+                writer.write("\nFEEDBACK_SUBMITTED\n");
             } else {
-                System.out.println();
-                writer.write("ERROR_SUBMITTING_FEEDBACK\n");
+                writer.write("\nERROR_SUBMITTING_FEEDBACK\n");
             }
             writer.flush();
         }
@@ -1073,22 +1049,14 @@ public class Server {
                 int rowsAffected = insertReportStatement.executeUpdate();
 
                 if (rowsAffected > 0) {
-                    System.out.println();
-                    writer.write("REPORT_SUBMITTED\n");
+                    writer.write("\nREPORT_SUBMITTED\n");
                 } else {
-                    System.out.println();
-                    writer.write("ERROR_SUBMITTING_REPORT\n");
+                    writer.write("\nERROR_SUBMITTING_REPORT\n");
                 }
             } else {
-                System.out.println();
-                writer.write("MEETUP_NOT_FOUND\n");
+                writer.write("\nMEETUP_NOT_FOUND\n");
             }
             writer.flush();
         }
-
-
-
-
-
     }
 }

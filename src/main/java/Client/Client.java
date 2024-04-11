@@ -6,7 +6,6 @@ import java.sql.SQLException;
 import java.util.Scanner;
 
 public class Client {
-
     static String serverIP;
     static int serverPort;
     private static String idolID;
@@ -1122,9 +1121,4 @@ public class Client {
         String reportResponse = reader.readLine();
         System.out.println(reportResponse);
     }
-
-
-
-
-
 }
