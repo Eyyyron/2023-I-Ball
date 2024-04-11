@@ -6,7 +6,7 @@ import java.sql.*;
 
 public class Server {
     private static final int PORT = 12345;
-    private static final String URL = "jdbc:mysql://localhost:3306/eyeball";
+    private static final String URL = "jdbc:mysql://localhost/teamsea";
     private static final String USER = "root";
     private static final String PASSWORD = null;
 
@@ -133,8 +133,11 @@ public class Server {
                         browseIdols(alias, writer);
                     } else if (requestType.equals("VIEW_INTERACTION_HISTORY")) {
                         viewInteractionHistory(requestData, writer);
-                    } else if (requestType.equals("RESERVE_MEETUP")){
+                    } else if (requestType.equals("RESERVE_MEETUP")) {
                         reserveMeetup(requestData, writer);
+                    } else if (requestType.equals("MAKE_PAYMENT")) {
+                        String paymentMethod = requestData[1];
+                        makePayment(paymentMethod, writer);
                     } else {
                         writer.write("Invalid request\n");
                         writer.flush();
@@ -843,5 +846,22 @@ public class Server {
             }
             writer.flush();
         }
+        private void makePayment(String paymentMethod, BufferedWriter writer) throws SQLException, IOException {
+            // Update the status of the meetup to "Pending" in the database
+            String query = "UPDATE MEETUP SET Status = 'Pending' WHERE Status = 'To Pay'";
+            Statement statement = connection.createStatement();
+            int rowsAffected = statement.executeUpdate(query);
+
+            if (rowsAffected > 0) {
+                // Send a response to the client indicating that the payment was successful
+                writer.write("PAYMENT_SUCCESS\n");
+                writer.flush();
+            } else {
+                // Send  response to the client indicating that the payment failed
+                writer.write("PAYMENT_FAILED\n");
+                writer.flush();
+            }
+        }
     }
+
 }
