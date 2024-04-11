@@ -6,9 +6,9 @@ import java.sql.*;
 
 public class Server {
     private static final int PORT = 12345;
-    private static final String URL = "jdbc:mysql://localhost:3306/teamsea";
+    private static final String URL = "jdbc:mysql://localhost:3306/eyeball";
     private static final String USER = "root";
-    private static final String PASSWORD = "ComSci_CS221";
+    private static final String PASSWORD = null;
 
     public static void main(String[] args) {
         try {
@@ -131,13 +131,10 @@ public class Server {
                     } else if (requestType.equals("BROWSE_IDOL")) {
                         String alias = requestData[1];
                         browseIdols(alias, writer);
-                    } else if (requestType.equals("RESERVE_MEETUP")){
-                        reserveMeetup(requestData, writer);
-                    } else if (requestType.equals("GET_IDOL_ID")){
-                        getAndSendIdolID(requestType, writer);
-                    }
+                    } else if (requestType.equals("VIEW_INTERACTION_HISTORY")) {
+                        viewInteractionHistory(requestData, writer);
 
-                    else {
+                    } else {
                         writer.write("Invalid request\n");
                         writer.flush();
                     }
@@ -753,61 +750,46 @@ public class Server {
             writer.flush();
         }
 
-        private void getAndSendIdolID(String alias, BufferedWriter writer) throws SQLException, IOException {
-            // SQL query to get IdolID by alias
-            String query = "SELECT IdolID FROM IDOL WHERE Alias = ?";
+        private void viewInteractionHistory(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            String fanID = data[1];
+
+            // Query the database to get the interaction history for the logged-in fan
+            String query = "SELECT MEETUP.MeetupID, MEETUP.DurationInMinutes, MEETUP.ScheduledDate, MEETUP.ScheduledTime, IDOL.Alias, FAN.FanFullName " +
+                    "FROM MEETUP " +
+                    "INNER JOIN FAN ON MEETUP.FanID = FAN.FanID " +
+                    "INNER JOIN IDOL ON MEETUP.IdolID = IDOL.IdolID " +
+                    "WHERE MEETUP.FanID =?";
             PreparedStatement statement = connection.prepareStatement(query);
-            statement.setString(1, alias);
+            statement.setString(1, fanID);
             ResultSet resultSet = statement.executeQuery();
 
-            if (resultSet.next()) {
-                String idolID = resultSet.getString("IdolID");
-                // Send the IdolID to the client
-                writer.write("IDOL_ID_FOUND\n");
-                writer.write(idolID + "\n");
+            // Prepare the interaction history string to send to the client
+            StringBuilder interactionHistoryString = new StringBuilder();
+            boolean hasInteractions = false;
+            while (resultSet.next()) {
+                if (hasInteractions) {
+                    interactionHistoryString.append(",");
+                } else {
+                    hasInteractions = true;
+                }
+
+                String meetupID = resultSet.getString("MeetupID");
+                int durationInMinutes = resultSet.getInt("DurationInMinutes");
+                String scheduledDate = resultSet.getString("ScheduledDate");
+                String scheduledTime = resultSet.getString("ScheduledTime");
+                String idolAlias = resultSet.getString("Alias");
+                String fanFullName = resultSet.getString("FanFullName");
+
+                interactionHistoryString.append(meetupID).append("|").append(durationInMinutes).append("|").append(scheduledDate).append("|").append(scheduledTime).append("|").append(idolAlias).append("|").append(fanFullName);
+            }
+
+            // Send the interaction history data to the client
+            if (hasInteractions) {
+                writer.write("INTERACTION_HISTORY_FOUND\n");
             } else {
-                // Send message indicating idol not found
-                writer.write("IDOL_ID_NOT_FOUND\n");
+                writer.write("NO_INTERACTION_HISTORY_FOUND\n");
             }
-            writer.flush();
-        }
-
-        private void reserveMeetup(String[] data, BufferedWriter writer) throws SQLException, IOException {
-            String fanID = data[1];
-            String idolID = data[2];
-            int durationInMinutes = Integer.parseInt(data[3]);
-            String scheduledDate = data[4];
-            String scheduledTime = data[5];
-            String status = data[6];
-
-            // Get the highest fanID from the IDOL table
-            String query = "SELECT MAX(MeetupID) FROM MEETUP";
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(query);
-            int meetupID = 1; // Initialize fanID to 1
-            if (resultSet.next()) {
-                meetupID = resultSet.getInt(1) + 1; // Increase the fanID by 1
-            }
-
-            // SQL query to reserve a meetup
-            query = "INSERT INTO MEETUP (MeetupID, FanID, IdolID, DurationInMinutes, ScheduledDate, ScheduledTime, Status) VALUES (?, ?, ?, ?, ?, ?, ?)";
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setInt(1, meetupID);
-            preparedStatement.setString(2, fanID);
-            preparedStatement.setString(3, idolID);
-            preparedStatement.setInt(4, durationInMinutes);
-            preparedStatement.setString(5, scheduledDate);
-            preparedStatement.setString(6, scheduledTime);
-            preparedStatement.setString(7, status);
-            int rowsInserted = preparedStatement.executeUpdate();
-
-            if (rowsInserted > 0) {
-                // Send confirmation to the client
-                writer.write("MEETUP_RESERVED\n");
-            } else {
-                // Send failure message to the client
-                writer.write("MEETUP_RESERVATION_FAILED\n");
-            }
+            writer.write(interactionHistoryString.toString() + "\n");
             writer.flush();
         }
     }

@@ -125,7 +125,10 @@ public class Client {
             System.out.println("2. Browse Idols");
             System.out.println("3. View Interaction History");
             System.out.println("4. View Available Idol Schedules");
-            System.out.println("5. Logout");
+            System.out.println("5. Reserve Meetup");
+            System.out.println("6. Payments");
+            System.out.println("7. Meetup Now");
+            System.out.println("8. Logout");
             System.out.print("Enter your choice: ");
 
             // Check if the input is an integer
@@ -142,12 +145,25 @@ public class Client {
                         break;
                     case 3:
                         System.out.println("\nViewing Interaction History...");
+                        viewInteractionHistory(writer, reader, scanner);
                         break;
                     case 4:
                         System.out.println("\nViewing Available Idol Schedules...");
                         viewSchedules(writer, reader, scanner);
                         break;
                     case 5:
+                        System.out.println("\nReserving Meetups...");
+                        System.out.println("hahah");
+                        break;
+                    case 6:
+                        System.out.println("\nOpening Payments...");
+                        System.out.println("hahah");
+                        break;
+                    case 7:
+                        System.out.println("\nMeeting Your Idol...");
+                        System.out.println("hahah");
+                        break;
+                    case 8:
                         System.out.println("\nLogging Out...");
                         System.out.println("\nThank you for using the program.");
                         writer.write("LOGOUT\n");
@@ -857,48 +873,36 @@ public class Client {
         }
     }
 
-    private static void reserveMeetup(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
-        System.out.println("\nReserve Meetup Menu:");
+    private static void viewInteractionHistory(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException, SQLException {
+        // Send request to the server to view the interaction history
+        writer.write("VIEW_INTERACTION_HISTORY," + fanID + "\n");
+        writer.flush();
 
-        // Ask for the alias of the idol
-        System.out.print("Enter the alias of the idol you want to reserve a meetup with: ");
-        String idolAlias = scanner.nextLine().trim();
+        // Receive and display the interaction history data
+        String response = reader.readLine();
+        if (response.equals("INTERACTION_HISTORY_FOUND")) {
+            System.out.println("\nInteraction History:");
+            System.out.println("------------------------------------------------------------------------------------------------------");
+            System.out.println("| Meetup ID  | Duration (mins) | Scheduled Date  | Scheduled Time  | Idol Alias |   Fan Full Name    |");
+            System.out.println("------------------------------------------------------------------------------------------------------");
 
-        if (!idolAlias.isEmpty()) {
-            // Send request to the server to get IdolID corresponding to the alias
-            writer.write("GET_IDOL_ID," + idolAlias + "\n");
-            writer.flush();
-            // Handle the response from the server
-            String idResponse = reader.readLine();
-            if (idResponse.equals("IDOL_ID_FOUND")) {
-                String idolID = reader.readLine();
-                // Ask for meetup details
-                System.out.print("Enter duration in minutes: ");
-                int durationInMinutes = scanner.nextInt();
-                System.out.print("Enter scheduled date (YYYY-MM-DD): ");
-                scanner.nextLine(); // Consume newline character
-                String scheduledDate = scanner.nextLine().trim();
-                System.out.print("Enter scheduled time (HH:MM): ");
-                String scheduledTime = scanner.nextLine().trim();
-                String status = "To Pay";
+            String interactionHistoryData = reader.readLine();
+            String[] interactions = interactionHistoryData.split(",");
+            for (String interaction : interactions) {
+                String[] fields = interaction.split("\\|");
+                String meetupID = fields[0];
+                int durationInMinutes = Integer.parseInt(fields[1]);
+                String scheduledDate = fields[2];
+                String scheduledTime = fields[3];
+                String idolAlias = fields[4];
+                String fanFullName = fields[5];
 
-                // Reserve the meetup with the idol
-                writer.write("RESERVE_MEETUP," + fanID + "," + idolID + "," + durationInMinutes + "," + scheduledDate + "," + scheduledTime + "," + status + "\n");
-                writer.flush();
-                // Handle the response from the server
-                String reserveResponse = reader.readLine();
-                if (reserveResponse.equals("MEETUP_RESERVED")) {
-                    System.out.println("\nMeetup successfully reserved!");
-                } else {
-                    System.out.println("\nFailed to reserve meetup. Please try again later.");
-                }
-            } else {
-                System.out.println("\nIdol not found.");
+                System.out.printf("| %-10s | %-15d | %-15s | %-15s | %-10s | %-15s |%n", meetupID, durationInMinutes, scheduledDate, scheduledTime, idolAlias, fanFullName);
             }
-        } else {
-            System.out.println("\nInvalid alias. Please enter a valid alias.");
+            System.out.println("------------------------------------------------------------------------------------------------------");
+            System.out.println("\nReturning to Fan Menu...");
+        } else if (response.equals("NO_INTERACTION_HISTORY_FOUND")) {
+            System.out.println("\nNo interaction history found.");
         }
     }
-
-
 }
