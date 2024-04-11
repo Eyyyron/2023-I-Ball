@@ -82,10 +82,10 @@ public class Server {
                         editIdolAlias(requestData, writer);
                     } else if (requestType.equals("EDIT_IDOL_EMAIL")) {
                         // Handle idol email edit
-                        editIdolEmail(requestData,writer);
+                        editIdolEmail(requestData, writer);
                     } else if (requestType.equals("EDIT_IDOL_PASSWORD")) {
                         // Handle idol password edit
-                        editIdolPassword(requestData,writer);
+                        editIdolPassword(requestData, writer);
                     } else if (requestType.equals("EDIT_IDOL_TYPE")) {
                         // Handle idol type edit
                         editIdolType(requestData, writer);
@@ -133,7 +133,11 @@ public class Server {
                         browseIdols(alias, writer);
                     } else if (requestType.equals("VIEW_INTERACTION_HISTORY")) {
                         viewInteractionHistory(requestData, writer);
-                    } else if (requestType.equals("RESERVE_MEETUP")){
+                    } else if (requestType.equals("RESERVE_MEETUP")) {
+                        reserveMeetup(requestData, writer);
+                    } else if (requestType.equals("MAKE_PAYMENT")) {
+                        String paymentMethod = requestData[1];
+                        makePayment(paymentMethod, writer);
                         reserveMeetup(requestData, writer);
                     } else {
                         writer.write("Invalid request\n");
@@ -844,4 +848,23 @@ public class Server {
             writer.flush();
         }
     }
+
+    private static void makePayment(String paymentMethod, BufferedWriter writer) throws SQLException, IOException {
+        // Update the status of the meetup to "Pending" in the database
+        String query = "UPDATE MEETUP SET Status = 'Pending' WHERE Status = 'To Pay'";
+        Statement statement = connection.createStatement();
+        int rowsAffected = statement.executeUpdate(query);
+
+        if (rowsAffected > 0) {
+            // Send a response to the client indicating that the payment was successful
+            writer.write("PAYMENT_SUCCESS\n");
+            writer.flush();
+
+        } else {
+            // Send a response to the client indicating that the payment failed
+            writer.write("PAYMENT_FAILED\n");
+            writer.flush();
+        }
+    }
+
 }

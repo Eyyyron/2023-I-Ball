@@ -157,7 +157,44 @@ public class Client {
                         break;
                     case 6:
                         System.out.println("\nOpening Payments...");
-                        System.out.println("hahah");
+                        System.out.println("1. Credit Card");
+                        System.out.println("2. Debit Card");
+                        System.out.println("3. PayPal");
+                        System.out.println("4. GCash");
+                        System.out.print("Enter your choice: ");
+
+                        if (scanner.hasNextInt()) {
+                            int paymentChoice = scanner.nextInt();
+                            switch (paymentChoice) {
+                                case 1:
+                                    // Send a request to the server to make a payment using a credit card
+                                    writer.write("MAKE_PAYMENT,Credit Card\n");
+                                    writer.flush();
+                                    break;
+                                case 2:
+                                    // Send a request to the server to make a payment using a debit card
+                                    writer.write("MAKE_PAYMENT,Debit Card\n");
+                                    writer.flush();
+                                    break;
+                                case 3:
+                                    // Send a request to the server to make a payment using PayPal
+                                    writer.write("MAKE_PAYMENT,PayPal\n");
+                                    writer.flush();
+                                    break;
+                                case 4:
+                                    // Send a request to the server to make a payment using GCash
+                                    writer.write("MAKE_PAYMENT,GCash\n");
+                                    writer.flush();
+                                    break;
+                                default:
+                                    System.out.println("\nInvalid choice. Please enter a valid option.");
+                                    break;
+                            }
+                        } else {
+                            // Consume non-integer input
+                            scanner.next();
+                            System.out.println("\nInvalid choice. Please enter a valid integer option.");
+                        }
                         break;
                     case 7:
                         System.out.println("\nMeeting Your Idol...");
