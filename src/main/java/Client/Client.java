@@ -207,14 +207,14 @@ public class Client {
                         break;
                     case 7:
                         System.out.println("\nMeeting Your Idol...");
-                        meetup(reader, writer, scanner);
+                        fanMeetup(reader, writer, scanner);
                         break;
                     case 8:
-                        System.out.println("\nWriting Feedback...");
+                        System.out.println("\nWriting a Feedback...");
                         writeFeedback(scanner, writer, reader);
                         break;
                     case 9:
-                        System.out.println("\nReporting Idol...");
+                        System.out.println("\nReporting an Idol...");
                         reportIdol(scanner, writer, reader);
                         break;
                     case 10:
@@ -269,13 +269,15 @@ public class Client {
                         break;
                     case 4:
                         System.out.println("\nMeeting Your Fan...");
+                        idolMeetup(reader, writer, scanner);
                         break;
                     case 5:
                         System.out.println("\nViewing Feedbacks...");
                         viewFeedbacks(writer, reader, scanner);
                         break;
                     case 6:
-                        System.out.println("\nReporting...");
+                        System.out.println("\nReporting a Fan...");
+                        reportFan(scanner, writer, reader);
                         break;
                     case 7:
                         System.out.println("\nLogging Out...");
@@ -1022,7 +1024,7 @@ public class Client {
         }
     }
 
-    public static void meetup(BufferedReader reader, BufferedWriter writer, Scanner scanner) throws IOException {
+    public static void fanMeetup(BufferedReader reader, BufferedWriter writer, Scanner scanner) throws IOException {
         System.out.print("\nEnter the meetup ID you want to access: ");
         String meetupID = scanner.nextLine();
         meetupID = scanner.nextLine();
@@ -1036,10 +1038,10 @@ public class Client {
         String[] parts = response.split(",");
         if (parts[0].equals("MEETUP_PENDING")) {
             System.out.println("\nMeetup Details:");
-            System.out.println("Idol Alias: " + parts[1]);
+            System.out.println("Idol: " + parts[1]);
             System.out.println("Duration: " + parts[2] + " minutes");
-            System.out.println("Scheduled Date: " + parts[3]);
-            System.out.println("Scheduled Time: " + parts[4]);
+            System.out.println("Date: " + parts[3]);
+            System.out.println("Time: " + parts[4]);
 
             System.out.print("\nWould you like to end the meetup? (yes/no): ");
             String endMeetupChoice = scanner.nextLine().trim().toLowerCase();
@@ -1058,6 +1060,47 @@ public class Client {
             System.out.println("\nThe meetup is already finished...");
         } else if (response.equals("MEETUP_TO_PAY")) {
             System.out.println("\nYou need to pay first before accessing this meetup...");
+        } else if (response.equals("MEETUP_NOT_FOUND")) {
+            System.out.println("\nMeetup ID not found...");
+        }
+    }
+
+    public static void idolMeetup(BufferedReader reader, BufferedWriter writer, Scanner scanner) throws IOException {
+        System.out.print("\nEnter the meetup ID you want to access: ");
+        String meetupID = scanner.nextLine();
+        meetupID = scanner.nextLine();
+
+        // Send the meetup access request to the server
+        writer.write("ACCESS_MEETUP_1," + meetupID + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        String[] parts = response.split(",");
+        if (parts[0].equals("MEETUP_PENDING")) {
+            System.out.println("\nMeetup Details:");
+            System.out.println("Fan: " + parts[1]); // Here, display the fan's username instead of idol alias
+            System.out.println("Duration: " + parts[2] + " minutes");
+            System.out.println("Date: " + parts[3]);
+            System.out.println("Time: " + parts[4]);
+
+            System.out.print("\nWould you like to end the meetup? (yes/no): ");
+            String endMeetupChoice = scanner.nextLine().trim().toLowerCase();
+
+            if (endMeetupChoice.equals("yes")) {
+                writer.write("END_MEETUP," + meetupID + "\n");
+                writer.flush();
+                String endResponse = reader.readLine();
+                if (endResponse.equals("MEETUP_ENDED")) {
+                    System.out.println("\nMeetup ended successfully...");
+                } else if (endResponse.equals("MEETUP_UPDATED")) {
+                    System.out.println("\nReturning to Idol Menu...");
+                }
+            }
+        } else if (response.equals("MEETUP_FINISHED")) {
+            System.out.println("\nThe meetup is already finished...");
+        } else if (response.equals("MEETUP_TO_PAY")) {
+            System.out.println("\nThe fan needs to pay first before accessing this meetup...");
         } else if (response.equals("MEETUP_NOT_FOUND")) {
             System.out.println("\nMeetup ID not found...");
         }
@@ -1083,11 +1126,50 @@ public class Client {
         System.out.println(feedbackResponse);
     }
 
+    public static void reportFan(Scanner scanner, BufferedWriter writer, BufferedReader reader) throws IOException {
+        System.out.println("Enter the meetup ID: ");
+        String meetupID = scanner.nextLine();
+        meetupID = scanner.nextLine();
+
+        // Prompt idol for report type and description
+        System.out.println("\nChoose a report type:");
+        System.out.println("1. Inappropriate Behavior");
+        System.out.println("2. Verbal Abuse");
+        System.out.println("3. Harassment");
+        System.out.print("Enter your choice: ");
+        String reportType = scanner.nextLine();
+        String reportTypeText;
+        switch (reportType) {
+            case "1":
+                reportTypeText = "Inappropriate Behavior";
+                break;
+            case "2":
+                reportTypeText = "Verbal Abuse";
+                break;
+            case "3":
+                reportTypeText = "Harassment";
+                break;
+            default:
+                System.out.println("Invalid report type.");
+                return;
+        }
+        System.out.print("Enter your report description: ");
+        String reportDescription = scanner.nextLine();
+
+        // Send report request to the server
+        writer.write("REPORT_FAN," + meetupID + "," + reportTypeText + "," + reportDescription + "\n");
+        writer.flush();
+
+        // Receive and display server response
+        String reportResponse = reader.readLine();
+        System.out.println(reportResponse);
+    }
+
     public static void reportIdol(Scanner scanner, BufferedWriter writer, BufferedReader reader) throws IOException {
         System.out.println("Enter the meetup ID: ");
         String meetupID = scanner.nextLine();
-
         meetupID = scanner.nextLine();
+
         // Prompt fan for report type and description
         System.out.println("\nChoose a report type:");
         System.out.println("1. Inappropriate Behavior");

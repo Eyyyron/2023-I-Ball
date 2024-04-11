@@ -119,11 +119,15 @@ public class Server {
                         String paymentMethod = requestData[1];
                         makePayment(paymentMethod, writer, reader);
                     } else if (requestType.equals("ACCESS_MEETUP")) {
-                        handleMeetupRequest(requestData, writer);
+                        handleFanMeetupRequest(requestData, writer);
+                    } else if (requestType.equals("ACCESS_MEETUP_1")) {
+                        handleIdolMeetupRequest(requestData, writer);
                     } else if (requestType.equals("WRITE_FEEDBACK")){
                         handleFeedbackRequest(requestData, writer);
                     } else if (requestType.equals("REPORT_IDOL")) {
                         handleReportIdolRequest(requestData, writer);
+                    } else if (requestType.equals("REPORT_FAN")) {
+                        handleReportFanRequest(requestData, writer);
                     } else {
                         writer.write("Invalid request\n");
                         writer.flush();
@@ -951,7 +955,7 @@ public class Server {
             }
         }
 
-        public void handleMeetupRequest(String[] data, BufferedWriter writer) throws SQLException, IOException {
+        public void handleFanMeetupRequest(String[] data, BufferedWriter writer) throws SQLException, IOException {
             String meetupID = data[1];
             String status = ""; // Initialize status variable
 
@@ -1003,6 +1007,58 @@ public class Server {
             }
         }
 
+        public void handleIdolMeetupRequest(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            String meetupID = data[1];
+            String status = ""; // Initialize status variable
+
+            // Retrieve meetup details from the database with a join to fetch FanUsername
+            String getMeetupQuery = "SELECT M.Status, F.Username AS FanUsername, M.DurationInMinutes, M.ScheduledDate, M.ScheduledTime " +
+                    "FROM MEETUP M " +
+                    "JOIN FAN F ON M.FanID = F.FanID " +
+                    "WHERE M.MeetupID = ?";
+            PreparedStatement getMeetupStatement = connection.prepareStatement(getMeetupQuery);
+            getMeetupStatement.setString(1, meetupID);
+            ResultSet meetupResult = getMeetupStatement.executeQuery();
+
+            if (meetupResult.next()) {
+                status = meetupResult.getString("Status"); // Assign value to status variable
+                String fanUsername = meetupResult.getString("FanUsername");
+                int duration = meetupResult.getInt("DurationInMinutes");
+                String scheduledDate = meetupResult.getString("ScheduledDate");
+                String scheduledTime = meetupResult.getString("ScheduledTime");
+
+                switch (status) {
+                    case "Pending":
+                        writer.write("MEETUP_PENDING," + fanUsername + "," + duration + "," + scheduledDate + "," + scheduledTime + "\n");
+                        break;
+                    case "Finished":
+                        writer.write("MEETUP_FINISHED\n");
+                        break;
+                    case "To Pay":
+                        writer.write("MEETUP_TO_PAY\n");
+                        break;
+                    default:
+                        writer.write("INVALID_MEETUP_STATUS\n");
+                        break;
+                }
+            } else {
+                writer.write("MEETUP_NOT_FOUND\n");
+            }
+            writer.flush();
+
+            // Update the Meetup table status if the user chose to end the meetup
+            if (status.equals("Pending")) {
+                String updateMeetupQuery = "UPDATE MEETUP SET Status = 'Finished' WHERE MeetupID = ?";
+                PreparedStatement updateMeetupStatement = connection.prepareStatement(updateMeetupQuery);
+                updateMeetupStatement.setString(1, meetupID);
+                int rowsAffected = updateMeetupStatement.executeUpdate();
+                if (rowsAffected > 0) {
+                    writer.write("MEETUP_UPDATED\n");
+                    writer.flush();
+                }
+            }
+        }
+
         public void handleFeedbackRequest(String[] data, BufferedWriter writer) throws SQLException, IOException {
             String meetupID = data[1];
             String rating = data[2];
@@ -1020,6 +1076,41 @@ public class Server {
                 writer.write("\nFEEDBACK_SUBMITTED\n");
             } else {
                 writer.write("\nERROR_SUBMITTING_FEEDBACK\n");
+            }
+            writer.flush();
+        }
+
+        public void handleReportFanRequest(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            String meetupID = data[1];
+            String reportType = data[2];
+            String reportDescription = data[3];
+
+            // Get FanID and IdolID related to the meetup
+            String getFanIdQuery = "SELECT FanID, IdolID FROM MEETUP WHERE MeetupID = ?";
+            PreparedStatement getFanIdStatement = connection.prepareStatement(getFanIdQuery);
+            getFanIdStatement.setString(1, meetupID);
+            ResultSet fanIdResult = getFanIdStatement.executeQuery();
+
+            if (fanIdResult.next()) {
+                String fanID = fanIdResult.getString("FanID");
+                String idolID = fanIdResult.getString("IdolID");
+
+                // Insert report into the database
+                String insertReportQuery = "INSERT INTO IDOLREPORT (IdolID, FanID, IdolReportType, IdolReportDescription) VALUES (?, ?, ?, ?)";
+                PreparedStatement insertReportStatement = connection.prepareStatement(insertReportQuery);
+                insertReportStatement.setString(1, idolID);
+                insertReportStatement.setString(2, fanID);
+                insertReportStatement.setString(3, reportType);
+                insertReportStatement.setString(4, reportDescription);
+                int rowsAffected = insertReportStatement.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    writer.write("\nREPORT_SUBMITTED\n");
+                } else {
+                    writer.write("\nERROR_SUBMITTING_REPORT\n");
+                }
+            } else {
+                writer.write("\nMEETUP_NOT_FOUND\n");
             }
             writer.flush();
         }
