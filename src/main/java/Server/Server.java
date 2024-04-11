@@ -142,6 +142,10 @@ public class Server {
                         makePayment(paymentMethod, writer, reader);
                     } else if (requestType.equals("ACCESS_MEETUP")) {
                         handleMeetupRequest(requestData, writer);
+                    } else if (requestType.equals("WRITE_FEEDBACK")){
+                        handleFeedbackRequest(requestData, writer);
+                    } else if (requestType.equals("REPORT_IDOL")) {
+                        handleReportIdolRequest(requestData, writer);
                     } else {
                         writer.write("Invalid request\n");
                         writer.flush();
@@ -1019,6 +1023,67 @@ public class Server {
                     writer.flush();
                 }
             }
+        }
+
+        public void handleFeedbackRequest(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            String meetupID = data[1];
+            String rating = data[2];
+            String comment = data[3];
+
+            // Insert feedback into the database
+            String insertFeedbackQuery = "INSERT INTO FEEDBACK (MeetupID, Rating, Comment) VALUES (?, ?, ?)";
+            PreparedStatement insertFeedbackStatement = connection.prepareStatement(insertFeedbackQuery);
+            insertFeedbackStatement.setString(1, meetupID);
+            insertFeedbackStatement.setString(2, rating);
+            insertFeedbackStatement.setString(3, comment);
+            int rowsAffected = insertFeedbackStatement.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println();
+                writer.write("FEEDBACK_SUBMITTED\n");
+            } else {
+                System.out.println();
+                writer.write("ERROR_SUBMITTING_FEEDBACK\n");
+            }
+            writer.flush();
+        }
+
+        public void handleReportIdolRequest(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            String meetupID = data[1];
+            String reportType = data[2];
+            String reportDescription = data[3];
+
+            // Get FanID and IdolID related to the meetup
+            String getFanIdolQuery = "SELECT FanID, IdolID FROM MEETUP WHERE MeetupID = ?";
+            PreparedStatement getFanIdolStatement = connection.prepareStatement(getFanIdolQuery);
+            getFanIdolStatement.setString(1, meetupID);
+            ResultSet fanIdolResult = getFanIdolStatement.executeQuery();
+
+            if (fanIdolResult.next()) {
+                String fanID = fanIdolResult.getString("FanID");
+                String idolID = fanIdolResult.getString("IdolID");
+
+                // Insert report into the database
+                String insertReportQuery = "INSERT INTO FANREPORT (FanID, IdolID, FanReportType, FanReportDescription) VALUES (?, ?, ?, ?)";
+                PreparedStatement insertReportStatement = connection.prepareStatement(insertReportQuery);
+                insertReportStatement.setString(1, fanID);
+                insertReportStatement.setString(2, idolID);
+                insertReportStatement.setString(3, reportType);
+                insertReportStatement.setString(4, reportDescription);
+                int rowsAffected = insertReportStatement.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    System.out.println();
+                    writer.write("REPORT_SUBMITTED\n");
+                } else {
+                    System.out.println();
+                    writer.write("ERROR_SUBMITTING_REPORT\n");
+                }
+            } else {
+                System.out.println();
+                writer.write("MEETUP_NOT_FOUND\n");
+            }
+            writer.flush();
         }
 
 
