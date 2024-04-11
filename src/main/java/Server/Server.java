@@ -91,7 +91,7 @@ public class Server {
                     } else if (requestType.equals("VIEW_TOTAL_EARNINGS")) {
                         viewTotalEarnings(requestData, writer);
                     } else if (requestType.equals("VIEW_FEEDBACKS")) {
-                        viewFeedbacks(requestData, writer);
+                        handleViewFeedbacksRequest(requestData, writer);
                     } else if (requestType.equals("EDIT_FAN_FULLNAME")) {
                         editFanFullName(requestData, writer);
                     } else if (requestType.equals("EDIT_FAN_USERNAME")) {
@@ -533,20 +533,16 @@ public class Server {
             writer.flush();
         }
 
-        private void viewFeedbacks(String[] data, BufferedWriter writer) throws SQLException, IOException {
-            int idolID = Integer.parseInt(data[1]);
+        private void handleViewFeedbacksRequest(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            String idolID = data[1];
 
-            // SQL query to retrieve feedbacks for the given IdolID
-            String query = "SELECT FAN.Username, FEEDBACK.Rating, FEEDBACK.Comment " +
-                    "FROM MEETUP " +
-                    "INNER JOIN FEEDBACK ON MEETUP.MeetupID = FEEDBACK.MeetupID " +
-                    "INNER JOIN FAN ON MEETUP.FanID = FAN.FanID " +
-                    "WHERE MEETUP.IdolID = ?";
+            // Query the database to get the feedbacks related to the logged-in idol along with the meetup IDs and ratings
+            String query = "SELECT F.FeedbackID, F.MeetupID, F.Rating FROM FEEDBACK F JOIN MEETUP M ON F.MeetupID = M.MeetupID WHERE M.IdolID = ?";
             PreparedStatement statement = connection.prepareStatement(query);
-            statement.setInt(1, idolID);
+            statement.setString(1, idolID);
             ResultSet resultSet = statement.executeQuery();
 
-            // Prepare feedbacks string to send to the client
+            // Prepare the feedbacks string to send to the client
             StringBuilder feedbacksString = new StringBuilder();
             boolean hasFeedbacks = false;
             while (resultSet.next()) {
@@ -556,14 +552,14 @@ public class Server {
                     hasFeedbacks = true;
                 }
 
-                String username = resultSet.getString("Username");
-                int rating = resultSet.getInt("Rating");
-                String comment = resultSet.getString("Comment");
+                String feedbackID = resultSet.getString("FeedbackID");
+                String meetupID = resultSet.getString("MeetupID");
+                String rating = resultSet.getString("Rating");
 
-                feedbacksString.append(username).append("|").append(rating).append("|").append(comment);
+                feedbacksString.append(feedbackID).append("|").append(meetupID).append("|").append(rating);
             }
 
-            // Send the response to the client
+            // Send the feedbacks data to the client
             if (hasFeedbacks) {
                 writer.write("FEEDBACKS_FOUND\n");
             } else {

@@ -273,7 +273,7 @@ public class Client {
                         break;
                     case 5:
                         System.out.println("\nViewing Feedbacks...");
-                        viewFeedbacks(writer, reader, scanner);
+                        idolViewFeedbacks(writer, reader);
                         break;
                     case 6:
                         System.out.println("\nReporting a Fan...");
@@ -724,9 +724,9 @@ public class Client {
         String response = reader.readLine();
         if (response.equals("EARNINGS_FOUND")) {
             System.out.println("\nEarnings:");
-            System.out.println("--------------------------------------------------------------------");
+            System.out.println("--------------------------------------------");
             System.out.println("| Year | Total in Dollars | Total in Qbits |");
-            System.out.println("--------------------------------------------------------------------");
+            System.out.println("--------------------------------------------");
 
             // Get the earnings data from the response and display them in a table
             String earningsData = reader.readLine();
@@ -738,10 +738,10 @@ public class Client {
                 String totalInDollars = fields[1];
                 String totalInQbits = fields[2];
 
-                System.out.printf("| %-5s | %-15s | %-15s |%n", yearField[0].trim(), totalInDollars, totalInQbits);
+                System.out.printf("| %-5s | %-15s | %-14s |%n", yearField[0].trim(), totalInDollars, totalInQbits);
             }
 
-            System.out.println("--------------------------------------------------------------------");
+            System.out.println("--------------------------------------------");
             System.out.println("\nReturning to Idol Menu...");
         } else if (response.equals("NO_EARNINGS_FOUND")) {
             System.out.println("\nNo earnings found.");
@@ -750,34 +750,37 @@ public class Client {
         }
     }
 
-    private static void viewFeedbacks(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
-        // Send feedback request to the server
+    private static void idolViewFeedbacks(BufferedWriter writer, BufferedReader reader) throws IOException {
+        // Send request to the server to view feedbacks
         writer.write("VIEW_FEEDBACKS," + idolID + "\n");
         writer.flush();
 
-        // Receive feedbacks from the server
+        // Receive and display the feedbacks data
         String response = reader.readLine();
         if (response.equals("FEEDBACKS_FOUND")) {
             System.out.println("\nFeedbacks:");
-            System.out.println("-------------------------------");
+            System.out.println("------------------------------------");
+            System.out.println("| Feedback ID | Meetup ID | Rating |");
+            System.out.println("------------------------------------");
+
             String feedbacksData = reader.readLine();
             String[] feedbacks = feedbacksData.split(",");
             for (String feedback : feedbacks) {
                 String[] fields = feedback.split("\\|");
-                String username = fields[0]; // Fan's Username
-                int rating = Integer.parseInt(fields[1]);
-                String comment = fields[2];
+                if (fields.length >= 3) { // Check if fields array has at least 3 elements
+                    String feedbackID = fields[0];
+                    String meetupID = fields[1];
+                    String rating = fields[2];
 
-                System.out.println("Fan's Username: " + username);
-                System.out.println("Rating: " + rating);
-                System.out.println("Comment: " + comment);
-                System.out.println("-------------------------------");
-                System.out.println("\nReturning to Idol Menu...");
+                    System.out.printf("| %-11s | %-9s | %-6s |%n", feedbackID, meetupID, rating);
+                } else {
+                    System.out.println("Invalid feedback format: " + feedback);
+                }
             }
+            System.out.println("------------------------------------");
+            System.out.println("\nReturning to Idol Menu...");
         } else if (response.equals("NO_FEEDBACKS_FOUND")) {
             System.out.println("\nNo feedbacks found.");
-        } else {
-            System.out.println("\nUnexpected response from server.");
         }
     }
 
@@ -1124,6 +1127,7 @@ public class Client {
         // Receive and display server response
         String feedbackResponse = reader.readLine();
         System.out.println(feedbackResponse);
+        System.out.println("\nReturning to Fan Menu...");
     }
 
     public static void reportFan(Scanner scanner, BufferedWriter writer, BufferedReader reader) throws IOException {
@@ -1162,7 +1166,8 @@ public class Client {
 
         // Receive and display server response
         String reportResponse = reader.readLine();
-        System.out.println(reportResponse);
+        System.out.print(reportResponse);
+        System.out.println("\nFan Reported. Returning to Idol Menu...");
     }
 
     public static void reportIdol(Scanner scanner, BufferedWriter writer, BufferedReader reader) throws IOException {
@@ -1201,6 +1206,7 @@ public class Client {
 
         // Receive and display server response
         String reportResponse = reader.readLine();
-        System.out.println(reportResponse);
+        System.out.print(reportResponse);
+        System.out.println("\nIdol Reported. Returning to Fan Menu...");
     }
 }
