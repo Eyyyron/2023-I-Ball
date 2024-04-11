@@ -1036,5 +1036,48 @@ public class Client {
         }
     }
 
+    private static void reserveMeetup(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        System.out.println("\nReserve Meetup Menu:");
+
+        // Ask for the alias of the idol
+        System.out.print("Enter the alias of the idol you want to reserve a meetup with: ");
+        String idolAlias = scanner.nextLine().trim();
+
+        if (!idolAlias.isEmpty()) {
+            // Send request to the server to get IdolID corresponding to the alias
+            writer.write("GET_IDOL_ID," + idolAlias + "\n");
+            writer.flush();
+            // Handle the response from the server
+            String idResponse = reader.readLine();
+            if (idResponse.equals("IDOL_ID_FOUND")) {
+                String idolID = reader.readLine();
+                // Ask for meetup details
+                System.out.print("Enter duration in minutes: ");
+                int durationInMinutes = scanner.nextInt();
+                System.out.print("Enter scheduled date (YYYY-MM-DD): ");
+                scanner.nextLine(); // Consume newline character
+                String scheduledDate = scanner.nextLine().trim();
+                System.out.print("Enter scheduled time (HH:MM): ");
+                String scheduledTime = scanner.nextLine().trim();
+                String status = "To Pay";
+
+                // Reserve the meetup with the idol
+                writer.write("RESERVE_MEETUP," + fanID + "," + idolID + "," + durationInMinutes + "," + scheduledDate + "," + scheduledTime + "," + status + "\n");
+                writer.flush();
+                // Handle the response from the server
+                String reserveResponse = reader.readLine();
+                if (reserveResponse.equals("MEETUP_RESERVED")) {
+                    System.out.println("\nMeetup successfully reserved!");
+                } else {
+                    System.out.println("\nFailed to reserve meetup. Please try again later.");
+                }
+            } else {
+                System.out.println("\nIdol not found.");
+            }
+        } else {
+            System.out.println("\nInvalid alias. Please enter a valid alias.");
+        }
+    }
+
 
 }

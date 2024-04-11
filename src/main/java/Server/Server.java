@@ -131,27 +131,10 @@ public class Server {
                     } else if (requestType.equals("BROWSE_IDOL")) {
                         String alias = requestData[1];
                         browseIdols(alias, writer);
-                    } else if (requestType.equals("VIEW_INTERACTION_HISTORY")) {
-                        int fanID = Integer.parseInt(requestData[1]);
-                        // Handle viewing interaction history of the logged-in user
-                        viewInteractionHistory(fanID, writer);
-                    } else if (requestType.equals("GET_MEETUP_DETAILS")) {
-                        int meetupID = Integer.parseInt(requestData[1]);
-                        int fanID = Integer.parseInt(requestData[2]);
-                        // Handle getting details of a specific meetup for the specified fanID
-                        getMeetupDetails(meetupID, fanID, writer);
-                    } else if (requestType.equals("MEET_NOW")) {
-                        int meetupID = Integer.parseInt(requestData[1]);
-                        int fanID = Integer.parseInt(requestData[2]);
-                        // Handle initiating the meetup
-                        meetNow(meetupID, fanID, writer);
-                    } else if (requestType.equals("REPORT_IDOL")) {
-                        int meetupID = Integer.parseInt(requestData[1]);
-                        int fanID = Integer.parseInt(requestData[2]);
-                        String reportType = requestData[3]; // Extract report type
-                        String reportDescription = requestData[4]; // Extract report description
-                        // Handle reporting the idol
-                        reportIdol(meetupID, fanID, reportType, reportDescription, writer);
+                    } else if (requestType.equals("RESERVE_MEETUP")){
+                        reserveMeetup(requestData, writer);
+                    } else if (requestType.equals("GET_IDOL_ID")){
+                        getAndSendIdolID(requestType, writer);
                     }
 
                     else {
@@ -770,120 +753,62 @@ public class Server {
             writer.flush();
         }
 
-        private void viewInteractionHistory(int fanID, BufferedWriter writer) throws SQLException, IOException {
-            // SQL query to retrieve interaction history for the given fanID
-            String query = "SELECT MEETUP.MeetupID, IDOL.Alias, MEETUP.Status " +
-                    "FROM MEETUP " +
-                    "INNER JOIN IDOL ON MEETUP.IdolID = IDOL.IdolID " +
-                    "WHERE MEETUP.FanID = ?";
+        private void getAndSendIdolID(String alias, BufferedWriter writer) throws SQLException, IOException {
+            // SQL query to get IdolID by alias
+            String query = "SELECT IdolID FROM IDOL WHERE Alias = ?";
             PreparedStatement statement = connection.prepareStatement(query);
-            statement.setInt(1, fanID);
+            statement.setString(1, alias);
             ResultSet resultSet = statement.executeQuery();
 
-            // Prepare interaction history string to send to the client
-            StringBuilder interactionHistoryString = new StringBuilder();
-            boolean hasInteractions = false;
-            while (resultSet.next()) {
-                if (hasInteractions) {
-                    interactionHistoryString.append(",");
-                } else {
-                    hasInteractions = true;
-                }
-
-                String meetupID = resultSet.getString("MeetupID");
-                String alias = resultSet.getString("Alias");
-                String status = resultSet.getString("Status");
-
-                interactionHistoryString.append(meetupID).append("|").append(alias).append("|").append(status);
-            }
-
-            // Send the response to the client
-            if (hasInteractions) {
-                writer.write("INTERACTION_HISTORY_FOUND\n");
+            if (resultSet.next()) {
+                String idolID = resultSet.getString("IdolID");
+                // Send the IdolID to the client
+                writer.write("IDOL_ID_FOUND\n");
+                writer.write(idolID + "\n");
             } else {
-                writer.write("NO_INTERACTION_HISTORY_FOUND\n");
-            }
-            writer.write(interactionHistoryString.toString() + "\n");
-            writer.flush();
-        }
-
-        private void getMeetupDetails(int meetupID, int fanID, BufferedWriter writer) throws SQLException, IOException {
-            // SQL query to check if the meetup exists for the given fanID
-            String queryCheck = "SELECT MeetupID FROM MEETUP WHERE MeetupID = ? AND FanID = ?";
-            PreparedStatement statementCheck = connection.prepareStatement(queryCheck);
-            statementCheck.setInt(1, meetupID);
-            statementCheck.setInt(2, fanID);
-            ResultSet resultSetCheck = statementCheck.executeQuery();
-            if (resultSetCheck.next()) {
-                // SQL query to retrieve details of the specified meetup
-                String query = "SELECT IDOL.Alias, MEETUP.Status " +
-                        "FROM MEETUP " +
-                        "INNER JOIN IDOL ON MEETUP.IdolID = IDOL.IdolID " +
-                        "WHERE MEETUP.MeetupID = ?";
-                PreparedStatement statement = connection.prepareStatement(query);
-                statement.setInt(1, meetupID);
-                ResultSet resultSet = statement.executeQuery();
-
-                // Check if the meetup exists
-                if (resultSet.next()) {
-                    // Extract meetup details
-                    String alias = resultSet.getString("Alias");
-                    String status = resultSet.getString("Status");
-                    // Send the response to the client
-                    writer.write("MEETUP_DETAILS_FOUND\n");
-                    writer.write(alias + "|" + status + "\n");
-                } else {
-                    // Send the response to the client if meetup not found
-                    writer.write("MEETUP_NOT_FOUND\n");
-                }
-            } else {
-                // Send the response to the client if meetup does not exist for the user
-                writer.write("MEETUP_NOT_FOUND_FOR_USER\n");
+                // Send message indicating idol not found
+                writer.write("IDOL_ID_NOT_FOUND\n");
             }
             writer.flush();
         }
 
-        private void meetNow(int meetupID, int fanID, BufferedWriter writer) throws SQLException, IOException {
-            // Implement the logic to initiate the meetup
-            // This could involve updating the meetup status to "Finished"
-            // For simplicity, let's assume it's handled by updating the status in the database
-            String updateQuery = "UPDATE MEETUP SET Status = 'Finished' WHERE MeetupID = ?";
-            PreparedStatement updateStatement = connection.prepareStatement(updateQuery);
-            updateStatement.setInt(1, meetupID);
-            int rowsAffected = updateStatement.executeUpdate();
+        private void reserveMeetup(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            String fanID = data[1];
+            String idolID = data[2];
+            int durationInMinutes = Integer.parseInt(data[3]);
+            String scheduledDate = data[4];
+            String scheduledTime = data[5];
+            String status = data[6];
 
-            // Send the response to the client
-            if (rowsAffected > 0) {
-                writer.write("MEETUP_INITIATED\n");
+            // Get the highest fanID from the IDOL table
+            String query = "SELECT MAX(MeetupID) FROM MEETUP";
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+            int meetupID = 1; // Initialize fanID to 1
+            if (resultSet.next()) {
+                meetupID = resultSet.getInt(1) + 1; // Increase the fanID by 1
+            }
+
+            // SQL query to reserve a meetup
+            query = "INSERT INTO MEETUP (MeetupID, FanID, IdolID, DurationInMinutes, ScheduledDate, ScheduledTime, Status) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setInt(1, meetupID);
+            preparedStatement.setString(2, fanID);
+            preparedStatement.setString(3, idolID);
+            preparedStatement.setInt(4, durationInMinutes);
+            preparedStatement.setString(5, scheduledDate);
+            preparedStatement.setString(6, scheduledTime);
+            preparedStatement.setString(7, status);
+            int rowsInserted = preparedStatement.executeUpdate();
+
+            if (rowsInserted > 0) {
+                // Send confirmation to the client
+                writer.write("MEETUP_RESERVED\n");
             } else {
-                writer.write("MEETUP_INITIATION_FAILED\n");
+                // Send failure message to the client
+                writer.write("MEETUP_RESERVATION_FAILED\n");
             }
             writer.flush();
         }
-
-        private void reportIdol(int meetupID, int fanID, String reportType, String reportDescription, BufferedWriter writer) throws SQLException, IOException {
-            // Implement the logic to report the idol
-            // Retrieve the MeetupID from the database using a join
-            String insertQuery = "INSERT INTO FANREPORT (FanID, IdolID, FanReportType, FanReportDescription) " +
-                    "SELECT M.FanID, M.IdolID, ?, ? " +
-                    "FROM MEETUP M " +
-                    "WHERE M.MeetupID = ?";
-            PreparedStatement insertStatement = connection.prepareStatement(insertQuery);
-            insertStatement.setString(1, reportType);
-            insertStatement.setString(2, reportDescription);
-            insertStatement.setInt(3, meetupID);
-            int rowsAffected = insertStatement.executeUpdate();
-
-            // Send the response to the client
-            if (rowsAffected > 0) {
-                writer.write("IDOL_REPORTED\n");
-            } else {
-                writer.write("IDOL_REPORT_FAILED\n");
-            }
-            writer.flush();
-        }
-
-
-
     }
 }
