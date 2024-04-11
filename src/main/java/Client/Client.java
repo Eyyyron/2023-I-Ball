@@ -141,7 +141,7 @@ public class Client {
                         break;
                     case 3:
                         System.out.println("\nViewing Interaction History...");
-                        // Placeholder for viewing interaction history
+                        viewInteractionHistory(writer, reader, scanner, Integer.parseInt(fanID));
                         break;
                     case 4:
                         System.out.println("\nViewing Available Idol Schedules...");
@@ -819,6 +819,155 @@ public class Client {
                 scanner.next();
                 System.out.println("\nInvalid choice. Please enter a valid integer option.");
             }
+        }
+    }
+
+    private static void viewInteractionHistory(BufferedWriter writer, BufferedReader reader, Scanner scanner, int fanID) throws IOException {
+        // Send interaction history request to the server for the logged-in user
+        writer.write("VIEW_INTERACTION_HISTORY," + fanID + "\n");
+        writer.flush();
+
+        // Receive interaction history from the server
+        String response = reader.readLine();
+        if (response.equals("INTERACTION_HISTORY_FOUND")) {
+            System.out.println("\nInteraction History:");
+            System.out.println("-------------------------------");
+            String interactionHistoryData = reader.readLine();
+            String[] interactions = interactionHistoryData.split(",");
+            for (String interaction : interactions) {
+                String[] fields = interaction.split("\\|");
+                String meetupID = fields[0];
+                String idolName = fields[1];
+                String status = fields[2];
+                // Display relevant interaction information
+                System.out.println("Meetup ID: " + meetupID);
+                System.out.println("Idol Name: " + idolName);
+                System.out.println("Status: " + status);
+                System.out.println("-------------------------------");
+            }
+            System.out.println("\nOptions:");
+            System.out.println("1. Interact");
+            System.out.println("2. Return");
+            System.out.println("Enter your choice: ");
+
+            // Handle additional options
+            int choice = scanner.nextInt();
+            switch (choice) {
+                case 1:
+                    System.out.print("\nEnter the meetup ID: ");
+                    int meetupID = scanner.nextInt();
+                    handleMeetupActions(writer, reader, scanner, meetupID, fanID);
+                    break;
+                case 2:
+                    System.out.println("Returning to Fan Menu...");
+                    break;
+                default:
+                    System.out.println("\nInvalid choice. Returning to Fan Menu...");
+                    break;
+            }
+        } else if (response.equals("NO_INTERACTION_HISTORY_FOUND")) {
+            System.out.println("\nNo interaction history found.");
+        } else {
+            System.out.println("\nUnexpected response from server.");
+        }
+    }
+
+    private static void handleMeetupActions(BufferedWriter writer, BufferedReader reader, Scanner scanner, int meetupID, int fanID) throws IOException {
+        // Send request to the server to retrieve details of the specified meetup
+        writer.write("GET_MEETUP_DETAILS," + meetupID + "," + fanID + "\n");
+        writer.flush();
+
+        // Receive meetup details from the server
+        String response = reader.readLine();
+        if (response.equals("MEETUP_DETAILS_FOUND")) {
+            String meetupDetailsData = reader.readLine();
+            String[] meetupDetails = meetupDetailsData.split("\\|");
+            String idolName = meetupDetails[0];
+            String status = meetupDetails[1];
+
+            System.out.println("\nMeetup Details:");
+            System.out.println("-------------------------------");
+            System.out.println("Meetup ID: " + meetupID);
+            System.out.println("Idol Name: " + idolName);
+            System.out.println("Status: " + status);
+            System.out.println("-------------------------------");
+
+            // Handle meetup actions based on status
+            if (status.equals("Pending")) {
+                System.out.println("\nMeetup is pending. Available actions:");
+                System.out.println("1. Meet Now");
+                System.out.println("2. Return");
+                int choice = scanner.nextInt();
+                switch (choice) {
+                    case 1:
+                        meetNow(writer, reader, scanner, meetupID, fanID);
+                        break;
+                    case 2:
+                        System.out.println("\nReturning...");
+                        break;
+                    default:
+                        System.out.println("\nInvalid choice. Returning to Interaction History...");
+                        break;
+                }
+            } else if (status.equals("Finished")) {
+                System.out.println("\nMeetup is finished. Available actions:");
+                System.out.println("1. Report");
+                System.out.println("2. Return");
+                System.out.println("Enter your choice: ");
+                int choice = scanner.nextInt();
+                switch (choice) {
+                    case 1:
+                        reportIdol(writer, reader, scanner, meetupID, fanID);
+                        break;
+                    case 2:
+                        System.out.println("\nReturning...");
+                        break;
+                    default:
+                        System.out.println("\nInvalid choice. Returning to Interaction History...");
+                        break;
+                }
+            } else {
+                System.out.println("\nInvalid meetup status. Returning to Interaction History...");
+            }
+        } else if (response.equals("MEETUP_NOT_FOUND_FOR_USER")) {
+            System.out.println("\nMeetup does not exist. Returning...");
+        } else if (response.equals("MEETUP_NOT_FOUND")) {
+            System.out.println("\nMeetup does not exist. Returning...");
+        } else {
+            System.out.println("\nUnexpected response from server.");
+        }
+    }
+
+    private static void meetNow(BufferedWriter writer, BufferedReader reader, Scanner scanner, int meetupID, int fanID) throws IOException {
+        // Implement the logic to initiate the meetup
+        // This could involve confirming the meetup with the server and updating its status
+        // For simplicity, let's assume it's handled by the server
+        // Send a request to the server to initiate the meetup
+        writer.write("MEET_NOW," + meetupID + "," + fanID + "\n");
+        writer.flush();
+
+        // Receive response from the server
+        String response = reader.readLine();
+        if (response.equals("MEETUP_INITIATED")) {
+            System.out.println("\nMeetup initiated successfully.");
+        } else {
+            System.out.println("\nFailed to initiate meetup.");
+        }
+    }
+
+    private static void reportIdol(BufferedWriter writer, BufferedReader reader, Scanner scanner, int meetupID, int fanID) throws IOException {
+        // Implement the logic to report the idol
+        // This could involve sending a report request to the server
+        // Send a request to the server to report the idol
+        writer.write("REPORT_IDOL," + meetupID + "," + fanID + "\n");
+        writer.flush();
+
+        // Receive response from the server
+        String response = reader.readLine();
+        if (response.equals("IDOL_REPORTED")) {
+            System.out.println("\nIdol reported successfully.");
+        } else {
+            System.out.println("\nFailed to report idol.");
         }
     }
 

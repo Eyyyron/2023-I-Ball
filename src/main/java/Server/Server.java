@@ -128,7 +128,27 @@ public class Server {
                     } else if (requestType.equals("BROWSE_IDOL")) {
                         String alias = requestData[1];
                         browseIdols(alias, writer);
-                    }else {
+                    } else if (requestType.equals("VIEW_INTERACTION_HISTORY")) {
+                        int fanID = Integer.parseInt(requestData[1]);
+                        // Handle viewing interaction history of the logged-in user
+                        viewInteractionHistory(fanID, writer);
+                    } else if (requestType.equals("GET_MEETUP_DETAILS")) {
+                        int meetupID = Integer.parseInt(requestData[1]);
+                        int fanID = Integer.parseInt(requestData[2]);
+                        // Handle getting details of a specific meetup for the specified fanID
+                        getMeetupDetails(meetupID, fanID, writer);
+                    } else if (requestType.equals("MEET_NOW")) {
+                        int meetupID = Integer.parseInt(requestData[1]);
+                        int fanID = Integer.parseInt(requestData[2]);
+                        // Handle initiating the meetup
+                        meetNow(meetupID, fanID, writer);
+                    } else if (requestType.equals("REPORT_IDOL")) {
+                        int meetupID = Integer.parseInt(requestData[1]);
+                        int fanID = Integer.parseInt(requestData[2]);
+                        // Handle reporting the idol
+                        reportIdol(meetupID, fanID, writer);
+                    }
+                    else {
                         writer.write("Invalid request\n");
                         writer.flush();
                     }
@@ -703,6 +723,118 @@ public class Server {
             } else {
                 // Send a message indicating idol not found
                 writer.write("IDOL_NOT_FOUND\n");
+            }
+            writer.flush();
+        }
+
+        private void viewInteractionHistory(int fanID, BufferedWriter writer) throws SQLException, IOException {
+            // SQL query to retrieve interaction history for the given fanID
+            String query = "SELECT MEETUP.MeetupID, IDOL.IdolFullName, MEETUP.Status " +
+                    "FROM MEETUP " +
+                    "INNER JOIN IDOL ON MEETUP.IdolID = IDOL.IdolID " +
+                    "WHERE MEETUP.FanID = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, fanID);
+            ResultSet resultSet = statement.executeQuery();
+
+            // Prepare interaction history string to send to the client
+            StringBuilder interactionHistoryString = new StringBuilder();
+            boolean hasInteractions = false;
+            while (resultSet.next()) {
+                if (hasInteractions) {
+                    interactionHistoryString.append(",");
+                } else {
+                    hasInteractions = true;
+                }
+
+                String meetupID = resultSet.getString("MeetupID");
+                String idolName = resultSet.getString("IdolFullName");
+                String status = resultSet.getString("Status");
+
+                interactionHistoryString.append(meetupID).append("|").append(idolName).append("|").append(status);
+            }
+
+            // Send the response to the client
+            if (hasInteractions) {
+                writer.write("INTERACTION_HISTORY_FOUND\n");
+            } else {
+                writer.write("NO_INTERACTION_HISTORY_FOUND\n");
+            }
+            writer.write(interactionHistoryString.toString() + "\n");
+            writer.flush();
+        }
+
+        private void getMeetupDetails(int meetupID, int fanID, BufferedWriter writer) throws SQLException, IOException {
+            // SQL query to check if the meetup exists for the given fanID
+            String queryCheck = "SELECT MeetupID FROM MEETUP WHERE MeetupID = ? AND FanID = ?";
+            PreparedStatement statementCheck = connection.prepareStatement(queryCheck);
+            statementCheck.setInt(1, meetupID);
+            statementCheck.setInt(2, fanID);
+            ResultSet resultSetCheck = statementCheck.executeQuery();
+            if (resultSetCheck.next()) {
+                // SQL query to retrieve details of the specified meetup
+                String query = "SELECT IDOL.IdolFullName, MEETUP.Status " +
+                        "FROM MEETUP " +
+                        "INNER JOIN IDOL ON MEETUP.IdolID = IDOL.IdolID " +
+                        "WHERE MEETUP.MeetupID = ?";
+                PreparedStatement statement = connection.prepareStatement(query);
+                statement.setInt(1, meetupID);
+                ResultSet resultSet = statement.executeQuery();
+
+                // Check if the meetup exists
+                if (resultSet.next()) {
+                    // Extract meetup details
+                    String idolName = resultSet.getString("IdolFullName");
+                    String status = resultSet.getString("Status");
+                    // Send the response to the client
+                    writer.write("MEETUP_DETAILS_FOUND\n");
+                    writer.write(idolName + "|" + status + "\n");
+                } else {
+                    // Send the response to the client if meetup not found
+                    writer.write("MEETUP_NOT_FOUND\n");
+                }
+            } else {
+                // Send the response to the client if meetup does not exist for the user
+                writer.write("MEETUP_NOT_FOUND_FOR_USER\n");
+            }
+            writer.flush();
+        }
+
+        private void meetNow(int meetupID, int fanID, BufferedWriter writer) throws SQLException, IOException {
+            // Implement the logic to initiate the meetup
+            // This could involve updating the meetup status to "Finished"
+            // For simplicity, let's assume it's handled by updating the status in the database
+            String updateQuery = "UPDATE MEETUP SET Status = 'Finished' WHERE MeetupID = ?";
+            PreparedStatement updateStatement = connection.prepareStatement(updateQuery);
+            updateStatement.setInt(1, meetupID);
+            int rowsAffected = updateStatement.executeUpdate();
+
+            // Send the response to the client
+            if (rowsAffected > 0) {
+                writer.write("MEETUP_INITIATED\n");
+            } else {
+                writer.write("MEETUP_INITIATION_FAILED\n");
+            }
+            writer.flush();
+        }
+
+        private void reportIdol(int meetupID, int fanID, BufferedWriter writer) throws SQLException, IOException {
+            // Implement the logic to report the idol
+            // This could involve inserting a record into the FANREPORT table
+            // For simplicity, let's assume it's handled by inserting a record into the database
+            String insertQuery = "INSERT INTO FANREPORT (FanID, MeetupID, FanReportType, FanReportDescription) VALUES (?, ?, ?, ?)";
+            PreparedStatement insertStatement = connection.prepareStatement(insertQuery);
+            insertStatement.setInt(1, fanID);
+            insertStatement.setInt(2, meetupID);
+            insertStatement.setString(3, "Idol Report");
+            insertStatement.setString(4, "Reported the idol after the meetup");
+            int rowsAffected = insertStatement.executeUpdate();
+
+            // Send the response to the client
+            if (rowsAffected > 0) {
+                writer.write("IDOL_REPORTED\n");
+            } else {
+                writer.write("IDOL_REPORT_FAILED\n");
             }
             writer.flush();
         }
