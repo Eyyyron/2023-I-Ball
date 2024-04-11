@@ -133,6 +133,8 @@ public class Server {
                         browseIdols(alias, writer);
                     } else if (requestType.equals("VIEW_INTERACTION_HISTORY")) {
                         viewInteractionHistory(requestData, writer);
+                    } else if (requestType.equals("VIEW_INTERACTION_HISTORY_1")){
+                        viewInteractionHistory1(requestData, writer);
                     } else if (requestType.equals("RESERVE_MEETUP")){
                         reserveMeetup(requestData, writer);
                     } else {
@@ -789,6 +791,49 @@ public class Server {
                 writer.write("INTERACTION_HISTORY_FOUND\n");
             } else {
                 writer.write("NO_INTERACTION_HISTORY_FOUND\n");
+            }
+            writer.write(interactionHistoryString.toString() + "\n");
+            writer.flush();
+        }
+
+        private void viewInteractionHistory1(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            String idolID = data[1];
+
+            // Query the database to get the interaction history for the logged-in fan
+            String query = "SELECT MEETUP.MeetupID, MEETUP.DurationInMinutes, MEETUP.ScheduledDate, MEETUP.ScheduledTime, IDOL.Alias, FAN.FanFullName " +
+                    "FROM MEETUP " +
+                    "INNER JOIN FAN ON MEETUP.FanID = FAN.FanID " +
+                    "INNER JOIN IDOL ON MEETUP.IdolID = IDOL.IdolID " +
+                    "WHERE MEETUP.IdolID =?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, idolID);
+            ResultSet resultSet = statement.executeQuery();
+
+            // Prepare the interaction history string to send to the client
+            StringBuilder interactionHistoryString = new StringBuilder();
+            boolean hasInteractions = false;
+            while (resultSet.next()) {
+                if (hasInteractions) {
+                    interactionHistoryString.append(",");
+                } else {
+                    hasInteractions = true;
+                }
+
+                String meetupID = resultSet.getString("MeetupID");
+                int durationInMinutes = resultSet.getInt("DurationInMinutes");
+                String scheduledDate = resultSet.getString("ScheduledDate");
+                String scheduledTime = resultSet.getString("ScheduledTime");
+                String idolAlias = resultSet.getString("Alias");
+                String fanFullName = resultSet.getString("FanFullName");
+
+                interactionHistoryString.append(meetupID).append("|").append(durationInMinutes).append("|").append(scheduledDate).append("|").append(scheduledTime).append("|").append(idolAlias).append("|").append(fanFullName);
+            }
+
+            // Send the interaction history data to the client
+            if (hasInteractions) {
+                writer.write("INTERACTION_HISTORY_FOUND_1\n");
+            } else {
+                writer.write("NO_INTERACTION_HISTORY_FOUND_1\n");
             }
             writer.write(interactionHistoryString.toString() + "\n");
             writer.flush();
