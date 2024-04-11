@@ -141,6 +141,9 @@ public class Server {
                         String paymentMethod = requestData[1];
                         makePayment(paymentMethod, writer, reader);
                         //reserveMeetup(requestData, writer);
+                    } else if (requestType.equals("MEETUP_NOW")) {
+                        int meetupID = Integer.parseInt(requestData[1]);
+                        meetup(meetupID, writer, reader);
                     } else if (requestType.equals("REPORT_IDOL")) {
                         reportIdol(requestData, writer);
                     } else if (requestType.equals("REPORT_FAN")) {
@@ -1019,6 +1022,57 @@ public class Server {
                 writer.write("REPORT_FAILED1\n");
             }
             writer.flush();
+        }
+        private void meetup(int meetupID, BufferedWriter writer, BufferedReader reader) throws SQLException, IOException {
+            String query = "SELECT DurationInMinutes, ScheduledDate, ScheduledTime, IDOL.Alias " +
+                    "FROM Meetup " +
+                    "INNER JOIN IDOL ON Meetup.IdolID = IDOL.IdolID " +
+                    "WHERE MeetupID =? AND Status =?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, meetupID);
+            statement.setString(2, "Pending");
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                String durationInMinutes = resultSet.getString("DurationInMinutes");
+                String scheduledDate = resultSet.getString("ScheduledDate");
+                String scheduledTime = resultSet.getString("ScheduledTime");
+                String alias = resultSet.getString("Alias");
+
+                // Send the meetup details to the Client
+                writer.write("MEETUP_DETAILS\n");
+                writer.write(durationInMinutes + "\n");
+                writer.write(scheduledDate + "\n");
+                writer.write(scheduledTime + "\n");
+                writer.write(alias + "\n");
+                writer.flush();
+
+                // Prompt the user with three options
+                writer.write("MEETUP_FINISHED\n");
+                writer.flush();
+
+                String response = reader.readLine();
+                if (response.equalsIgnoreCase("yes")) {
+                    // Update the Status column in the meetup table from "Pending" to "Finished"
+                    String updateQuery = "UPDATE Meetup SET Status = 'Finished' WHERE MeetupID =?";
+                    PreparedStatement updateStatement = connection.prepareStatement(updateQuery);
+                    updateStatement.setInt(1, meetupID);
+                    updateStatement.executeUpdate();
+
+                    // Send the updated meetup status to the Client
+                    writer.write("MEETUP_FINISHED\n");
+                    writer.flush();
+                } else {
+                    writer.write("MEETUP_NOT_FINISHED\n");
+                    writer.flush();
+                }
+            } else if (resultSet.getString("Status").equals("To Pay")) {
+                writer.write("PAY_FIRST\n");
+                writer.flush();
+            } else {
+                writer.write("MEETUP_NOT_FOUND\n");
+                writer.flush();
+            }
         }
     }
 }

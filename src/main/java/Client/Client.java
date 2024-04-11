@@ -207,6 +207,9 @@ public class Client {
                         break;
                     case 7:
                         System.out.println("\nMeeting Your Idol...");
+                        System.out.println("\nEnter the Meetup ID: ");
+                        int meetupID = scanner.nextInt();
+                        meetup(writer, reader, meetupID);
                         break;
                     case 8:
                         System.out.println("\nReporting...");
@@ -1101,6 +1104,51 @@ public class Client {
             System.out.println("\nReport added successfully.");
         } else {
             System.out.println("\nFailed to add report.");
+        }
+    }
+    private static void meetup(BufferedWriter writer, BufferedReader reader, int meetupID) throws IOException {
+        Scanner scanner = new Scanner(System.in);
+
+        // Send the meetup request to the server
+        writer.write("MEETUP_NOW," + meetupID + "\n");
+        writer.flush();
+
+        // Read the server response
+        String response = reader.readLine();
+
+        if (response.contains("MEETUP_DETAILS")) {
+            // Read and display meetup details from the server
+            String durationInMinutes = reader.readLine();
+            String scheduledDate = reader.readLine();
+            String scheduledTime = reader.readLine();
+            String alias = reader.readLine();
+
+            System.out.println("\nMeeting with that idol in a moment...");
+            System.out.println("Duration: " + durationInMinutes + " minutes");
+            System.out.println("Scheduled Date: " + scheduledDate);
+            System.out.println("Scheduled Time: " + scheduledTime);
+            System.out.println("Idol Alias: " + alias);
+
+            // Prompt the user with three options
+            System.out.println("\nWould you like to finish the meetup? (yes/no)");
+            String userResponse = scanner.nextLine();
+
+            // Send the user response to the server
+            writer.write(userResponse + "\n");
+            writer.flush();
+
+            // Read the server response
+            response = reader.readLine();
+
+            if (response.equalsIgnoreCase("MEETUP_FINISHED")) {
+                System.out.println("\nMeetup has been finished.");
+            } else {
+                System.out.println("\nMeetup has not been finished.");
+            }
+        } else if (response.equalsIgnoreCase("PAY_FIRST")) {
+            System.out.println("\nPlease pay first to start the meetup.");
+        } else {
+            System.out.println("\nMeetup not found.");
         }
     }
 }
