@@ -732,7 +732,7 @@ public class Server {
 
         private void viewInteractionHistory(int fanID, BufferedWriter writer) throws SQLException, IOException {
             // SQL query to retrieve interaction history for the given fanID
-            String query = "SELECT MEETUP.MeetupID, IDOL.IdolFullName, MEETUP.Status " +
+            String query = "SELECT MEETUP.MeetupID, IDOL.Alias, MEETUP.Status " +
                     "FROM MEETUP " +
                     "INNER JOIN IDOL ON MEETUP.IdolID = IDOL.IdolID " +
                     "WHERE MEETUP.FanID = ?";
@@ -751,10 +751,10 @@ public class Server {
                 }
 
                 String meetupID = resultSet.getString("MeetupID");
-                String idolName = resultSet.getString("IdolFullName");
+                String alias = resultSet.getString("Alias");
                 String status = resultSet.getString("Status");
 
-                interactionHistoryString.append(meetupID).append("|").append(idolName).append("|").append(status);
+                interactionHistoryString.append(meetupID).append("|").append(alias).append("|").append(status);
             }
 
             // Send the response to the client
@@ -776,7 +776,7 @@ public class Server {
             ResultSet resultSetCheck = statementCheck.executeQuery();
             if (resultSetCheck.next()) {
                 // SQL query to retrieve details of the specified meetup
-                String query = "SELECT IDOL.IdolFullName, MEETUP.Status " +
+                String query = "SELECT IDOL.Alias, MEETUP.Status " +
                         "FROM MEETUP " +
                         "INNER JOIN IDOL ON MEETUP.IdolID = IDOL.IdolID " +
                         "WHERE MEETUP.MeetupID = ?";
@@ -787,11 +787,11 @@ public class Server {
                 // Check if the meetup exists
                 if (resultSet.next()) {
                     // Extract meetup details
-                    String idolName = resultSet.getString("IdolFullName");
+                    String alias = resultSet.getString("Alias");
                     String status = resultSet.getString("Status");
                     // Send the response to the client
                     writer.write("MEETUP_DETAILS_FOUND\n");
-                    writer.write(idolName + "|" + status + "\n");
+                    writer.write(alias + "|" + status + "\n");
                 } else {
                     // Send the response to the client if meetup not found
                     writer.write("MEETUP_NOT_FOUND\n");
