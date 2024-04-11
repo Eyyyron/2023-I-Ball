@@ -210,7 +210,7 @@ public class Client {
                         break;
                     case 8:
                         System.out.println("\nReporting...");
-                        reportIdol(writer, reader, scanner);
+                        break;
                     case 9:
                         System.out.println("\nLogging Out...");
                         System.out.println("\nThank you for using the program.");
@@ -239,9 +239,10 @@ public class Client {
             System.out.println("1. Edit Profile");
             System.out.println("2. View Total Earnings");
             System.out.println("3. View Interaction History");
-            System.out.println("4. View Feedbacks");
-            System.out.println("5. Report");
-            System.out.println("6. Logout");
+            System.out.println("4. Meet Now");
+            System.out.println("5. View Feedbacks");
+            System.out.println("6. Report");
+            System.out.println("7. Logout");
             System.out.print("Enter your choice: ");
 
             // Check if the input is an integer
@@ -261,13 +262,16 @@ public class Client {
                         idolViewInteractionHistory(writer, reader, scanner);
                         break;
                     case 4:
+                        System.out.println("\nMeeting Your Fan...");
+                        break;
+                    case 5:
                         System.out.println("\nViewing Feedbacks...");
                         viewFeedbacks(writer, reader, scanner);
                         break;
-                    case 5:
-                        System.out.println("\nReporting...");
-                        reportFan(writer, reader, scanner);
                     case 6:
+                        System.out.println("\nReporting...");
+                        break;
+                    case 7:
                         System.out.println("\nLogging Out...");
                         System.out.println("\nThank you for using Eyeball!");
                         writer.write("LOGOUT\n");
@@ -730,6 +734,7 @@ public class Client {
             }
 
             System.out.println("--------------------------------------------------------------------");
+            System.out.println("\nReturning to Idol Menu...");
         } else if (response.equals("NO_EARNINGS_FOUND")) {
             System.out.println("\nNo earnings found.");
         } else {
