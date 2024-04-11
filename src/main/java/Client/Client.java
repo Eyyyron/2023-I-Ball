@@ -128,7 +128,8 @@ public class Client {
             System.out.println("5. Reserve Meetup");
             System.out.println("6. Payments");
             System.out.println("7. Meetup Now");
-            System.out.println("8. Logout");
+            System.out.println("8. Report");
+            System.out.println("9. Logout");
             System.out.print("Enter your choice: ");
 
             // Check if the input is an integer
@@ -145,7 +146,7 @@ public class Client {
                         break;
                     case 3:
                         System.out.println("\nViewing Interaction History...");
-                        viewInteractionHistory(writer, reader, scanner);
+                        fanViewInteractionHistory(writer, reader, scanner);
                         break;
                     case 4:
                         System.out.println("\nViewing Available Idol Schedules...");
@@ -170,21 +171,25 @@ public class Client {
                                     // Send a request to the server to make a payment using a credit card
                                     writer.write("MAKE_PAYMENT,Credit Card\n");
                                     writer.flush();
+                                    System.out.println("\nReturning to Fan Menu...");
                                     break;
                                 case 2:
                                     // Send a request to the server to make a payment using a debit card
                                     writer.write("MAKE_PAYMENT,Debit Card\n");
                                     writer.flush();
+                                    System.out.println("\nReturning to Fan Menu...");
                                     break;
                                 case 3:
                                     // Send a request to the server to make a payment using PayPal
                                     writer.write("MAKE_PAYMENT,PayPal\n");
                                     writer.flush();
+                                    System.out.println("\nReturning to Fan Menu...");
                                     break;
                                 case 4:
                                     // Send a request to the server to make a payment using GCash
                                     writer.write("MAKE_PAYMENT,GCash\n");
                                     writer.flush();
+                                    System.out.println("\nReturning to Fan Menu...");
                                     break;
                                 default:
                                     System.out.println("\nInvalid choice. Please enter a valid option.");
@@ -198,9 +203,11 @@ public class Client {
                         break;
                     case 7:
                         System.out.println("\nMeeting Your Idol...");
-                        System.out.println("hahah");
                         break;
                     case 8:
+                        System.out.println("\nReporting...");
+                        reportIdol(writer, reader, scanner);
+                    case 9:
                         System.out.println("\nLogging Out...");
                         System.out.println("\nThank you for using the program.");
                         writer.write("LOGOUT\n");
@@ -220,7 +227,7 @@ public class Client {
         }
     }
 
-    private static void idolMenu(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+    private static void idolMenu(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException, SQLException {
         boolean logout = false;
 
         while (!logout) {
@@ -229,7 +236,8 @@ public class Client {
             System.out.println("2. View Total Earnings");
             System.out.println("3. View Interaction History");
             System.out.println("4. View Feedbacks");
-            System.out.println("5. Logout");
+            System.out.println("5. Report");
+            System.out.println("6. Logout");
             System.out.print("Enter your choice: ");
 
             // Check if the input is an integer
@@ -241,23 +249,21 @@ public class Client {
                         menuEditIdolProfile(writer, reader, scanner);
                         break;
                     case 2:
-                        /**
-                         * PLACEHOLDER FOR (IDOL) VIEWING TOTAL EARNINGS
-                         */
                         System.out.println("\nViewing Total Earnings...");
                         viewTotalEarnings(writer, reader, scanner);
                         break;
                     case 3:
-                        /**
-                         * PLACEHOLDER FOR (IDOL) VIEWING INTERACTION HISTORY
-                         */
                         System.out.println("\nViewing Interaction History...");
+                        idolViewInteractionHistory(writer, reader, scanner);
                         break;
                     case 4:
                         System.out.println("\nViewing Feedbacks...");
                         viewFeedbacks(writer, reader, scanner);
                         break;
                     case 5:
+                        System.out.println("\nReporting...");
+                        reportFan(writer, reader, scanner);
+                    case 6:
                         System.out.println("\nLogging Out...");
                         System.out.println("\nThank you for using Eyeball!");
                         writer.write("LOGOUT\n");
@@ -910,7 +916,7 @@ public class Client {
         }
     }
 
-    private static void viewInteractionHistory(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException, SQLException {
+    private static void fanViewInteractionHistory(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException, SQLException {
         // Send request to the server to view the interaction history
         writer.write("VIEW_INTERACTION_HISTORY," + fanID + "\n");
         writer.flush();
@@ -943,6 +949,39 @@ public class Client {
         }
     }
 
+    private static void idolViewInteractionHistory(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException, SQLException {
+        // Send request to the server to view the interaction history
+        writer.write("VIEW_INTERACTION_HISTORY_1," + idolID + "\n");
+        writer.flush();
+
+        // Receive and display the interaction history data
+        String response = reader.readLine();
+        if (response.equals("INTERACTION_HISTORY_FOUND_1")) {
+            System.out.println("\nInteraction History:");
+            System.out.println("----------------------------------------------------------------------------------------------------------------");
+            System.out.println("| Meetup ID  | Duration (mins) | Scheduled Date  | Scheduled Time  |      Idol Alias      |   Fan Full Name    |");
+            System.out.println("----------------------------------------------------------------------------------------------------------------");
+
+            String interactionHistoryData = reader.readLine();
+            String[] interactions = interactionHistoryData.split(",");
+            for (String interaction : interactions) {
+                String[] fields = interaction.split("\\|");
+                String meetupID = fields[0];
+                int durationInMinutes = Integer.parseInt(fields[1]);
+                String scheduledDate = fields[2];
+                String scheduledTime = fields[3];
+                String idolAlias = fields[4];
+                String fanFullName = fields[5];
+
+                System.out.printf("| %-10s | %-15d | %-15s | %-15s | %-20s | %-18s |%n", meetupID, durationInMinutes, scheduledDate, scheduledTime, idolAlias, fanFullName);
+            }
+            System.out.println("----------------------------------------------------------------------------------------------------------------");
+            System.out.println("\nReturning to Idol Menu...");
+        } else if (response.equals("NO_INTERACTION_HISTORY_FOUND_1")) {
+            System.out.println("\nNo interaction history found.");
+        }
+    }
+
     private static void reserveMeetup(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
         System.out.print("\nEnter the alias of the idol you want to reserve a meeting with: ");
         String idolAlias = scanner.nextLine();
@@ -965,6 +1004,94 @@ public class Client {
         String response = reader.readLine();
         if(response.equals("MEETUP_RESERVED")){
             System.out.println("\nMeetup Reserved Successfully...");
+        }
+    }
+
+    private static void reportIdol(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        System.out.print("\nEnter the idol ID: ");
+        String idolID = scanner.nextLine();
+        idolID = scanner.nextLine();
+
+        System.out.println("\nChoose report type:");
+        System.out.println("1. Inappropriate Behavior");
+        System.out.println("2. Verbal Abuse");
+        System.out.println("3. Harassment");
+        System.out.print("Enter your choice: ");
+
+        int choice = scanner.nextInt();
+        String reportType = "";
+        switch (choice) {
+            case 1:
+                reportType = "Inappropriate Behavior";
+                break;
+            case 2:
+                reportType = "Verbal Abuse";
+                break;
+            case 3:
+                reportType = "Harassment";
+                break;
+            default:
+                System.out.println("\nInvalid choice. Please enter a valid option.");
+                return;
+        }
+
+        System.out.print("\nEnter the description of the report: ");
+        String reportDescription = scanner.nextLine();
+
+        // Send the report request to the server
+        writer.write("REPORT_IDOL," + fanID + "," + idolID + "," + reportType + "," + reportDescription + ",\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        if (response.equals("REPORT_ADDED")) {
+            System.out.println("\nReport added successfully.");
+        } else {
+            System.out.println("\nFailed to add report.");
+        }
+    }
+
+    private static void reportFan(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
+        System.out.print("\nEnter the fan ID: ");
+        String fanID = scanner.nextLine();
+        fanID = scanner.nextLine();
+
+        System.out.println("\nChoose report type:");
+        System.out.println("1. Inappropriate Behavior");
+        System.out.println("2. Verbal Abuse");
+        System.out.println("3. Harassment");
+        System.out.print("Enter your choice: ");
+
+        int choice = scanner.nextInt();
+        String reportType = "";
+        switch (choice) {
+            case 1:
+                reportType = "Inappropriate Behavior";
+                break;
+            case 2:
+                reportType = "Verbal Abuse";
+                break;
+            case 3:
+                reportType = "Harassment";
+                break;
+            default:
+                System.out.println("\nInvalid choice. Please enter a valid option.");
+                return;
+        }
+
+        System.out.print("\nEnter the description of the report: ");
+        String reportDescription = scanner.nextLine();
+
+        // Send the report request to the server
+        writer.write("REPORT_FAN," + idolID + "," + fanID + "," + reportType + "," + reportDescription + ",\n");
+        writer.flush();
+
+        // Receive and display server response
+        String response = reader.readLine();
+        if (response.equals("REPORT_ADDED1")) {
+            System.out.println("\nReport added successfully.");
+        } else {
+            System.out.println("\nFailed to add report.");
         }
     }
 }

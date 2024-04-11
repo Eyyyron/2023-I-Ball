@@ -132,13 +132,19 @@ public class Server {
                         String alias = requestData[1];
                         browseIdols(alias, writer);
                     } else if (requestType.equals("VIEW_INTERACTION_HISTORY")) {
-                        viewInteractionHistory(requestData, writer);
+                        fanViewInteractionHistory(requestData, writer);
+                    } else if (requestType.equals("VIEW_INTERACTION_HISTORY_1")) {
+                        idolViewInteractionHistory(requestData, writer);
                     } else if (requestType.equals("RESERVE_MEETUP")) {
                         reserveMeetup(requestData, writer);
                     } else if (requestType.equals("MAKE_PAYMENT")) {
                         String paymentMethod = requestData[1];
                         makePayment(paymentMethod, writer);
                         reserveMeetup(requestData, writer);
+                    } else if (requestType.equals("REPORT_IDOL")) {
+                        reportIdol(requestData, writer);
+                    } else if (requestType.equals("REPORT_FAN")) {
+                        reportFan(requestData, writer);
                     } else {
                         writer.write("Invalid request\n");
                         writer.flush();
@@ -755,7 +761,7 @@ public class Server {
             writer.flush();
         }
 
-        private void viewInteractionHistory(String[] data, BufferedWriter writer) throws SQLException, IOException {
+        private void fanViewInteractionHistory(String[] data, BufferedWriter writer) throws SQLException, IOException {
             String fanID = data[1];
 
             // Query the database to get the interaction history for the logged-in fan
@@ -793,6 +799,49 @@ public class Server {
                 writer.write("INTERACTION_HISTORY_FOUND\n");
             } else {
                 writer.write("NO_INTERACTION_HISTORY_FOUND\n");
+            }
+            writer.write(interactionHistoryString.toString() + "\n");
+            writer.flush();
+        }
+
+        private void idolViewInteractionHistory(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            String idolID = data[1];
+
+            // Query the database to get the interaction history for the logged-in idol
+            String query = "SELECT MEETUP.MeetupID, MEETUP.DurationInMinutes, MEETUP.ScheduledDate, MEETUP.ScheduledTime, IDOL.Alias, FAN.FanFullName " +
+                    "FROM MEETUP " +
+                    "INNER JOIN FAN ON MEETUP.FanID = FAN.FanID " +
+                    "INNER JOIN IDOL ON MEETUP.IdolID = IDOL.IdolID " +
+                    "WHERE MEETUP.IdolID =?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, idolID);
+            ResultSet resultSet = statement.executeQuery();
+
+            // Prepare the interaction history string to send to the client
+            StringBuilder interactionHistoryString = new StringBuilder();
+            boolean hasInteractions = false;
+            while (resultSet.next()) {
+                if (hasInteractions) {
+                    interactionHistoryString.append(",");
+                } else {
+                    hasInteractions = true;
+                }
+
+                String meetupID = resultSet.getString("MeetupID");
+                int durationInMinutes = resultSet.getInt("DurationInMinutes");
+                String scheduledDate = resultSet.getString("ScheduledDate");
+                String scheduledTime = resultSet.getString("ScheduledTime");
+                String idolAlias = resultSet.getString("Alias");
+                String fanFullName = resultSet.getString("FanFullName");
+
+                interactionHistoryString.append(meetupID).append("|").append(durationInMinutes).append("|").append(scheduledDate).append("|").append(scheduledTime).append("|").append(idolAlias).append("|").append(fanFullName);
+            }
+
+            // Send the interaction history data to the client
+            if (hasInteractions) {
+                writer.write("INTERACTION_HISTORY_FOUND_1\n");
+            } else {
+                writer.write("NO_INTERACTION_HISTORY_FOUND_1\n");
             }
             writer.write(interactionHistoryString.toString() + "\n");
             writer.flush();
@@ -847,24 +896,72 @@ public class Server {
             }
             writer.flush();
         }
-    }
 
-    private static void makePayment(String paymentMethod, BufferedWriter writer) throws SQLException, IOException {
-        // Update the status of the meetup to "Pending" in the database
-        String query = "UPDATE MEETUP SET Status = 'Pending' WHERE Status = 'To Pay'";
-        Statement statement = connection.createStatement();
-        int rowsAffected = statement.executeUpdate(query);
+        private void makePayment(String paymentMethod, BufferedWriter writer) throws SQLException, IOException {
+            // Update the status of the meetup to "Pending" in the database
+            String query = "UPDATE MEETUP SET Status = 'Pending' WHERE Status = 'To Pay'";
+            Statement statement = connection.createStatement();
+            int rowsAffected = statement.executeUpdate(query);
 
-        if (rowsAffected > 0) {
-            // Send a response to the client indicating that the payment was successful
-            writer.write("PAYMENT_SUCCESS\n");
+            if (rowsAffected > 0) {
+                // Send a response to the client indicating that the payment was successful
+                writer.write("PAYMENT_SUCCESS\n");
+                writer.flush();
+
+            } else {
+                // Send a response to the client indicating that the payment failed
+                writer.write("PAYMENT_FAILED\n");
+                writer.flush();
+            }
+        }
+
+        public void reportIdol(String[] data, BufferedWriter writer) throws SQLException, IOException{
+            String fanID = data[1];
+            String idolID = data[2];
+            String reportType = data[3];
+            String reportDescription = data[4];
+
+            // Add the report to the FANREPORT table
+            String query = "INSERT INTO FANREPORT (FanReportID, FanID, IdolID, FanReportType, FanReportDescription) VALUES (?,?,?,?,?)";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, fanID);
+            preparedStatement.setString(2, idolID);
+            preparedStatement.setString(3, reportType);
+            preparedStatement.setString(4, reportDescription);
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            // Send response to client
+            if (rowsAffected > 0) {
+                writer.write("REPORT_ADDED\n");
+            } else {
+                writer.write("REPORT_FAILED\n");
+            }
             writer.flush();
+        }
 
-        } else {
-            // Send a response to the client indicating that the payment failed
-            writer.write("PAYMENT_FAILED\n");
+        public void reportFan(String[] data, BufferedWriter writer) throws SQLException, IOException{
+            String idolID = data[1];
+            String fanID = data[2];
+            String reportType = data[3];
+            String reportDescription = data[4];
+
+            // Add the report to the IDOLREPORT table
+            String query = "INSERT INTO IDOLREPORT (IdolReportID, IdolID, FanID, IdolReportType, IdolReportDescription) VALUES (?,?,?,?,?)";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, idolID);
+            preparedStatement.setString(2, fanID);
+            preparedStatement.setString(3, reportType);
+            preparedStatement.setString(4, reportDescription);
+
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            // Send response to client
+            if (rowsAffected > 0) {
+                writer.write("REPORT_ADDED1\n");
+            } else {
+                writer.write("REPORT_FAILED1\n");
+            }
             writer.flush();
         }
     }
-
 }
