@@ -366,7 +366,8 @@ public class Client {
     private static void editQBitRate(BufferedWriter writer, BufferedReader reader, Scanner scanner) throws IOException {
         // Get the new QBit rate from the user
         System.out.print("\nEnter the new QBit rate per 10 minutes: ");
-        String qbitRatePer10Mins = scanner.nextLine();
+        String qbitRatePer10Mins = scanner.nextLine(); // Consume the newline character
+        qbitRatePer10Mins = scanner.nextLine(); // Read the QBit rate
 
         // Send QBit rate update request to the server
         writer.write("EDIT_QBIT_RATE," + idolID + "," + qbitRatePer10Mins + "\n");

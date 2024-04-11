@@ -91,7 +91,8 @@ public class Server {
                         }
                         writer.write("END_OF_LIST\n"); // Indicate the end of the list
                         writer.flush();
-                    } else if (requestType.equals("EDIT_QBIT_RATE")) {
+                    }
+                    if (requestType.equals("EDIT_QBIT_RATE")) {
                         // Handle editing QBit rate
                         editQBitRate(requestData, writer);
                     } else {
@@ -188,6 +189,7 @@ public class Server {
             }
             writer.flush();
         }
+
         private List<String> getIdols(String day) throws SQLException {
             List<String> idols = new ArrayList<>();
             // Join the AVAILABILITY and IDOL tables to fetch idol details along with their availability
@@ -270,14 +272,21 @@ public class Server {
         }
 
         private void editQBitRate(String[] data, BufferedWriter writer) throws SQLException, IOException {
+            // Check if data array contains at least 3 elements
+            if (data.length < 3) {
+                writer.write("Insufficient data for editing QBit rate\n");
+                writer.flush();
+                return; // Exit the method
+            }
+
             // Extract idol details from data array
             String idolID = data[1];
-            String qbitRatePer10Mins = data[2];
+            float qbitRatePer10Mins = Float.parseFloat(data[2]);
 
             // Perform QBit rate update
             String query = "UPDATE IDOL SET QBitRatePer10Mins =? WHERE IdolID =?";
             PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, qbitRatePer10Mins);
+            preparedStatement.setFloat(1, qbitRatePer10Mins);
             preparedStatement.setString(2, idolID);
             int rowsAffected = preparedStatement.executeUpdate();
 
