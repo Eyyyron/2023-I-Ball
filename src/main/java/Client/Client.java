@@ -1022,12 +1022,20 @@ public class Client {
 
         // Receive and display server response
         String response = reader.readLine();
-        if(response.equals("MEETUP_RESERVED")){
+        if (response.equals("MEETUP_RESERVED")) {
             System.out.println("\nMeetup Reserved Successfully...");
+        } else if (response.equals("MEETUP_OUTSIDE_IDOL_AVAILABILITY")) {
+            System.out.println("Meetup is outside idol's availability.");
+        } else if (response.equals("IDOL_NOT_FOUND")) {
+            System.out.println("Idol not found.");
+        } else if (response.equals("MEETUP_ALREADY_SCHEDULED")) {
+            System.out.println("Meetup already scheduled.");
+        } else {
+            System.out.println("Error reserving meetup.");
         }
     }
 
-    public static void fanMeetup(BufferedReader reader, BufferedWriter writer, Scanner scanner) throws IOException {
+        public static void fanMeetup(BufferedReader reader, BufferedWriter writer, Scanner scanner) throws IOException {
         System.out.print("\nEnter the meetup ID you want to access: ");
         String meetupID = scanner.nextLine();
         meetupID = scanner.nextLine();

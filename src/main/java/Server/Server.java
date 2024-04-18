@@ -3,6 +3,8 @@ package Server;
 import java.io.*;
 import java.net.*;
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 public class Server {
     private static final int PORT = 12345;
@@ -834,7 +836,7 @@ public class Server {
             String scheduledTime = data[5];
 
             // Check if the idol exists
-            String checkIdolQuery = "SELECT IdolID FROM IDOL WHERE Alias = ?";
+            String checkIdolQuery = "SELECT IdolID FROM IDOL WHERE Alias =?";
             PreparedStatement checkIdolStatement = connection.prepareStatement(checkIdolQuery);
             checkIdolStatement.setString(1, idolAlias);
             ResultSet checkIdolResult = checkIdolStatement.executeQuery();
@@ -843,7 +845,7 @@ public class Server {
                 int idolID = checkIdolResult.getInt("IdolID");
 
                 // Check if the fan and idol have a meetup scheduled on the same date and time
-                String checkMeetupQuery = "SELECT * FROM MEETUP WHERE FanID = ? AND IdolID = ? AND ScheduledDate = ? AND ScheduledTime = ?";
+                String checkMeetupQuery = "SELECT * FROM MEETUP WHERE FanID =? AND IdolID =? AND ScheduledDate =? AND ScheduledTime =?";
                 PreparedStatement checkMeetupStatement = connection.prepareStatement(checkMeetupQuery);
                 checkMeetupStatement.setInt(1, Integer.parseInt(fanID));
                 checkMeetupStatement.setInt(2, idolID);
@@ -852,20 +854,33 @@ public class Server {
                 ResultSet checkMeetupResult = checkMeetupStatement.executeQuery();
 
                 if (!checkMeetupResult.next()) {
-                    // Insert the new meetup into the MEETUP table
-                    String insertMeetupQuery = "INSERT INTO MEETUP (FanID, IdolID, DurationInMinutes, ScheduledDate, ScheduledTime, Status) VALUES (?, ?, ?, ?, ?, 'To Pay')";
-                    PreparedStatement insertMeetupStatement = connection.prepareStatement(insertMeetupQuery);
-                    insertMeetupStatement.setInt(1, Integer.parseInt(fanID));
-                    insertMeetupStatement.setInt(2, idolID);
-                    insertMeetupStatement.setInt(3, durationInMinutes);
-                    insertMeetupStatement.setString(4, scheduledDate);
-                    insertMeetupStatement.setString(5, scheduledTime);
-                    int rowsAffected = insertMeetupStatement.executeUpdate();
+                    // Check if the scheduled time is within the idol's availability
+                    String checkAvailabilityQuery = "SELECT * FROM AVAILABILITY WHERE IdolID =? AND AvailableDay =? AND StartTime <=? AND EndTime >?";
+                    PreparedStatement checkAvailabilityStatement = connection.prepareStatement(checkAvailabilityQuery);
+                    checkAvailabilityStatement.setInt(1, idolID);
+                    checkAvailabilityStatement.setString(2, getDayOfWeek(scheduledDate));
+                    checkAvailabilityStatement.setTime(3, Time.valueOf(scheduledTime));
+                    checkAvailabilityStatement.setTime(4, Time.valueOf(LocalTime.parse(scheduledTime).plusMinutes(durationInMinutes)));
+                    ResultSet checkAvailabilityResult = checkAvailabilityStatement.executeQuery();
 
-                    if (rowsAffected > 0) {
-                        writer.write("MEETUP_RESERVED\n");
+                    if (checkAvailabilityResult.next()) {
+                        // Insert the new meetup into the MEETUP table
+                        String insertMeetupQuery = "INSERT INTO MEETUP (FanID, IdolID, DurationInMinutes, ScheduledDate, ScheduledTime, Status) VALUES (?,?,?,?,?, 'To Pay')";
+                        PreparedStatement insertMeetupStatement = connection.prepareStatement(insertMeetupQuery);
+                        insertMeetupStatement.setInt(1, Integer.parseInt(fanID));
+                        insertMeetupStatement.setInt(2, idolID);
+                        insertMeetupStatement.setInt(3, durationInMinutes);
+                        insertMeetupStatement.setString(4, scheduledDate);
+                        insertMeetupStatement.setString(5, scheduledTime);
+                        int rowsAffected = insertMeetupStatement.executeUpdate();
+
+                        if (rowsAffected > 0) {
+                            writer.write("MEETUP_RESERVED\n");
+                        } else {
+                            writer.write("ERROR_RESERVING_MEETUP\n");
+                        }
                     } else {
-                        writer.write("ERROR_RESERVING_MEETUP\n");
+                        writer.write("MEETUP_OUTSIDE_IDOL_AVAILABILITY\n");
                     }
                 } else {
                     writer.write("MEETUP_ALREADY_SCHEDULED\n");
@@ -874,6 +889,11 @@ public class Server {
                 writer.write("IDOL_NOT_FOUND\n");
             }
             writer.flush();
+        }
+
+        private String getDayOfWeek(String date) {
+            LocalDate localDate = LocalDate.parse(date);
+            return localDate.getDayOfWeek().toString();
         }
 
         private void makePayment(String paymentMethod, BufferedWriter writer, BufferedReader reader) throws IOException, SQLException {
