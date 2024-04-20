@@ -979,7 +979,7 @@ public class Server {
             String getMeetupQuery = "SELECT M.Status, I.Alias AS IdolAlias, M.DurationInMinutes, M.ScheduledDate, M.ScheduledTime " +
                     "FROM MEETUP M " +
                     "JOIN IDOL I ON M.IdolID = I.IdolID " +
-                    "WHERE M.MeetupID = ?";
+                    "WHERE M.MeetupID =?";
             PreparedStatement getMeetupStatement = connection.prepareStatement(getMeetupQuery);
             getMeetupStatement.setString(1, meetupID);
             ResultSet meetupResult = getMeetupStatement.executeQuery();
@@ -1009,18 +1009,6 @@ public class Server {
                 writer.write("MEETUP_NOT_FOUND\n");
             }
             writer.flush();
-
-            // Update the Meetup table status if the user chose to end the meetup
-            if (status.equals("Pending")) {
-                String updateMeetupQuery = "UPDATE MEETUP SET Status = 'Finished' WHERE MeetupID = ?";
-                PreparedStatement updateMeetupStatement = connection.prepareStatement(updateMeetupQuery);
-                updateMeetupStatement.setString(1, meetupID);
-                int rowsAffected = updateMeetupStatement.executeUpdate();
-                if (rowsAffected > 0) {
-                    writer.write("MEETUP_UPDATED\n");
-                    writer.flush();
-                }
-            }
         }
 
         public void handleIdolMeetupRequest(String[] data, BufferedWriter writer) throws SQLException, IOException {
@@ -1031,7 +1019,7 @@ public class Server {
             String getMeetupQuery = "SELECT M.Status, F.Username AS FanUsername, M.DurationInMinutes, M.ScheduledDate, M.ScheduledTime " +
                     "FROM MEETUP M " +
                     "JOIN FAN F ON M.FanID = F.FanID " +
-                    "WHERE M.MeetupID = ?";
+                    "WHERE M.MeetupID =?";
             PreparedStatement getMeetupStatement = connection.prepareStatement(getMeetupQuery);
             getMeetupStatement.setString(1, meetupID);
             ResultSet meetupResult = getMeetupStatement.executeQuery();
@@ -1061,18 +1049,6 @@ public class Server {
                 writer.write("MEETUP_NOT_FOUND\n");
             }
             writer.flush();
-
-            // Update the Meetup table status if the user chose to end the meetup
-            if (status.equals("Pending")) {
-                String updateMeetupQuery = "UPDATE MEETUP SET Status = 'Finished' WHERE MeetupID = ?";
-                PreparedStatement updateMeetupStatement = connection.prepareStatement(updateMeetupQuery);
-                updateMeetupStatement.setString(1, meetupID);
-                int rowsAffected = updateMeetupStatement.executeUpdate();
-                if (rowsAffected > 0) {
-                    writer.write("MEETUP_UPDATED\n");
-                    writer.flush();
-                }
-            }
         }
 
         public void handleFeedbackRequest(String[] data, BufferedWriter writer) throws SQLException, IOException {

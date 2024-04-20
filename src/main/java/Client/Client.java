@@ -3,6 +3,8 @@ package Client;
 import java.io.*;
 import java.net.Socket;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 public class Client {
@@ -1035,7 +1037,7 @@ public class Client {
         }
     }
 
-        public static void fanMeetup(BufferedReader reader, BufferedWriter writer, Scanner scanner) throws IOException {
+    public static void fanMeetup(BufferedReader reader, BufferedWriter writer, Scanner scanner) throws IOException {
         System.out.print("\nEnter the meetup ID you want to access: ");
         String meetupID = scanner.nextLine();
         meetupID = scanner.nextLine();
@@ -1047,24 +1049,41 @@ public class Client {
         // Receive and display server response
         String response = reader.readLine();
         String[] parts = response.split(",");
-        if (parts[0].equals("MEETUP_PENDING")) {
-            System.out.println("\nMeetup Details:");
-            System.out.println("Idol: " + parts[1]);
-            System.out.println("Duration: " + parts[2] + " minutes");
-            System.out.println("Date: " + parts[3]);
-            System.out.println("Time: " + parts[4]);
 
-            System.out.print("\nWould you like to end the meetup? (yes/no): ");
-            String endMeetupChoice = scanner.nextLine().trim().toLowerCase();
+        if (response.startsWith("MEETUP_PENDING")) {
+            LocalDateTime currentDateTime = LocalDateTime.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            LocalDateTime scheduledDateTime = LocalDateTime.parse(parts[3] + " " + parts[4], formatter);
+            if (currentDateTime.isBefore(scheduledDateTime) || currentDateTime.isAfter(scheduledDateTime)) {
+                System.out.println("\nYou have no meeting at this moment...");
+                System.out.println("\nReturning to Fan Menu...");
+            } else {
+                System.out.println("\nMeetup Details:");
+                System.out.println("Idol: " + parts[1]);
+                System.out.println("Duration: " + parts[2] + " minutes");
+                System.out.println("Date: " + parts[3]);
+                System.out.println("Time: " + parts[4]);
 
-            if (endMeetupChoice.equals("yes")) {
-                writer.write("END_MEETUP," + meetupID + "\n");
-                writer.flush();
-                String endResponse = reader.readLine();
-                if (endResponse.equals("MEETUP_ENDED")) {
-                    System.out.println("\nMeetup ended successfully...");
-                } else if (endResponse.equals("MEETUP_UPDATED")) {
-                    System.out.println("\nReturning to Fan Menu...");
+                boolean endMeetup = false;
+                System.out.print("\nWould you like to end the meetup? (yes/no): ");
+                String endMeetupChoice = scanner.nextLine().trim().toLowerCase();
+
+                if (endMeetupChoice.equals("yes")) {
+                    endMeetup = true;
+                    writer.write("END_MEETUP," + meetupID + "\n");
+                    writer.flush();
+                    String endResponse = reader.readLine();
+                    if (endResponse.equals("MEETUP_ENDED")) {
+                        System.out.println("\nMeetup ended successfully...");
+                    } else if (endResponse.equals("MEETUP_UPDATED")) {
+                        System.out.println("\nReturning to Fan Menu...");
+                    }
+                }
+
+                if (endMeetup) {
+                    // Update the Meetup table status to "Finished"
+                    writer.write("UPDATE_MEETUP_STATUS," + meetupID + ",Finished\n");
+                    writer.flush();
                 }
             }
         } else if (response.equals("MEETUP_FINISHED")) {
@@ -1088,24 +1107,41 @@ public class Client {
         // Receive and display server response
         String response = reader.readLine();
         String[] parts = response.split(",");
-        if (parts[0].equals("MEETUP_PENDING")) {
-            System.out.println("\nMeetup Details:");
-            System.out.println("Fan: " + parts[1]); // Here, display the fan's username instead of idol alias
-            System.out.println("Duration: " + parts[2] + " minutes");
-            System.out.println("Date: " + parts[3]);
-            System.out.println("Time: " + parts[4]);
 
-            System.out.print("\nWould you like to end the meetup? (yes/no): ");
-            String endMeetupChoice = scanner.nextLine().trim().toLowerCase();
+        if (response.startsWith("MEETUP_PENDING")) {
+            LocalDateTime currentDateTime = LocalDateTime.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            LocalDateTime scheduledDateTime = LocalDateTime.parse(parts[3] + " " + parts[4], formatter);
+            if (currentDateTime.isBefore(scheduledDateTime) || currentDateTime.isAfter(scheduledDateTime)) {
+                System.out.println("\nYou have no meeting at this moment...");
+                System.out.println("\nReturning to Idol Menu...");
+            } else {
+                System.out.println("\nMeetup Details:");
+                System.out.println("Fan: " + parts[1]);
+                System.out.println("Duration: " + parts[2] + " minutes");
+                System.out.println("Date: " + parts[3]);
+                System.out.println("Time: " + parts[4]);
 
-            if (endMeetupChoice.equals("yes")) {
-                writer.write("END_MEETUP," + meetupID + "\n");
-                writer.flush();
-                String endResponse = reader.readLine();
-                if (endResponse.equals("MEETUP_ENDED")) {
-                    System.out.println("\nMeetup ended successfully...");
-                } else if (endResponse.equals("MEETUP_UPDATED")) {
-                    System.out.println("\nReturning to Idol Menu...");
+                boolean endMeetup = false;
+                System.out.print("\nWould you like to end the meetup? (yes/no): ");
+                String endMeetupChoice = scanner.nextLine().trim().toLowerCase();
+
+                if (endMeetupChoice.equals("yes")) {
+                    endMeetup = true;
+                    writer.write("END_MEETUP," + meetupID + "\n");
+                    writer.flush();
+                    String endResponse = reader.readLine();
+                    if (endResponse.equals("MEETUP_ENDED")) {
+                        System.out.println("\nMeetup ended successfully...");
+                    } else if (endResponse.equals("MEETUP_UPDATED")) {
+                        System.out.println("\nReturning to Idol Menu...");
+                    }
+                }
+
+                if (endMeetup) {
+                    // Update the Meetup table status to "Finished"
+                    writer.write("UPDATE_MEETUP_STATUS," + meetupID + ",Finished\n");
+                    writer.flush();
                 }
             }
         } else if (response.equals("MEETUP_FINISHED")) {
