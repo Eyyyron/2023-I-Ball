@@ -5,6 +5,8 @@ This project involves creating a Server_Java program that allows connections fro
 
 ## Author
 - Aguilar, Aaron Kyle
+- Urbiztondo, Karl Jasper
+- Villareal, Carlo Leeon
 
 ## Technology Stack
 - Java
